@@ -325,6 +325,14 @@
   line-height: 1;
 }
 
+.externalIcon {
+  display: block;
+  width: 15px;
+  height: 15px;
+  flex: 0 0 15px;
+  color: currentColor;
+}
+
 .section {
   width: var(--page);
   margin: 0 auto;
@@ -590,9 +598,9 @@
 .contactMain { margin: auto 0; }
 .contactMain p { margin: 0 0 20px; color: var(--muted); }
 .contactMain h2 { margin: 0; font-size: clamp(5rem, 14vw, 13rem); line-height: 0.8; letter-spacing: -0.08em; }
-.contactMain h2 a { display: inline-flex; align-items: flex-start; gap: 20px; }
-.contactMain h2 span { color: var(--accent); font-size: 0.28em; letter-spacing: 0; transition: transform 0.3s ease; }
-.contactMain h2 a:hover span { transform: translate(7px, -7px); }
+.contactMain h2 a { display: inline-flex; align-items: center; gap: 20px; }
+.contactMain h2 .externalIcon { width: 16px; height: 16px; flex-basis: 16px; color: var(--accent); transition: transform 0.3s ease; }
+.contactMain h2 a:hover .externalIcon { transform: translate(7px, -7px); }
 
 .footer {
   display: grid;

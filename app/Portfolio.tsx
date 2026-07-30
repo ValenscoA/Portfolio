@@ -48,7 +48,25 @@ const reveal = {
 };
 
 function Arrow({ diagonal = false }: { diagonal?: boolean }) {
-  return <span aria-hidden="true">{diagonal ? "↗" : "→"}</span>;
+  if (diagonal) {
+    return (
+      <svg
+        className={styles.externalIcon}
+        aria-hidden="true"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      >
+        <path d="M7 17 17 7" />
+        <path d="M7 7h10v10" />
+      </svg>
+    );
+  }
+
+  return <span aria-hidden="true">→</span>;
 }
 
 function AmbientBackground() {
