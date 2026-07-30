@@ -13,6 +13,7 @@
   pointer-events: none;
   background:
     radial-gradient(ellipse at 50% 42%, rgba(22, 41, 61, 0.13), transparent 40%),
+    url("/images/hero-background.png") center / cover no-repeat,
     #050505;
 }
 
