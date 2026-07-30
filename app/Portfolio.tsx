@@ -41,10 +41,10 @@ const projects = [
 ];
 
 const reveal = {
-  initial: { opacity: 0, y: 34 },
+  initial: { opacity: 0, y: 18 },
   whileInView: { opacity: 1, y: 0 },
   viewport: { once: true, margin: "-12%" },
-  transition: { duration: 0.85, ease: [0.22, 1, 0.36, 1] as const },
+  transition: { duration: 1.05, ease: [0.22, 1, 0.36, 1] as const },
 };
 
 function Arrow({ diagonal = false }: { diagonal?: boolean }) {
@@ -77,9 +77,9 @@ function Nav({
   return (
     <motion.header
       className={styles.navbar}
-      initial={{ opacity: 0, top: -88 }}
+      initial={{ opacity: 0, top: 6 }}
       animate={{ opacity: 1, top: 20 }}
-      transition={{ duration: 0.8, delay: 0.15, ease: [0.22, 1, 0.36, 1] }}
+      transition={{ duration: 1, delay: 0.1, ease: [0.22, 1, 0.36, 1] }}
       aria-label="Primary navigation"
     >
       <a className={styles.monogram} href="#top" aria-label="Back to top">
@@ -143,8 +143,8 @@ function Menu({ isOpen, closeMenu }: { isOpen: boolean; closeMenu: () => void })
                 key={item.label}
                 href={item.href}
                 onClick={closeMenu}
-                variants={{ hidden: { opacity: 0, y: 40 }, show: { opacity: 1, y: 0 } }}
-                transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
+                variants={{ hidden: { opacity: 0, y: 22 }, show: { opacity: 1, y: 0 } }}
+                transition={{ duration: 0.75, ease: [0.22, 1, 0.36, 1] }}
               >
                 <span>0{index + 1}</span>{item.label}
               </motion.a>
@@ -208,38 +208,28 @@ export default function Portfolio() {
       <section className={styles.hero} aria-labelledby="hero-title">
         <motion.h1
           id="hero-title"
-          initial={{ opacity: 0, y: 52 }}
+          initial={{ opacity: 0, y: 24 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 1.05, delay: 0.48, ease: [0.22, 1, 0.36, 1] }}
+          transition={{ duration: 1.2, delay: 0.4, ease: [0.22, 1, 0.36, 1] }}
         >
-          Valensco <span>Aurelius</span>
+          <span className={styles.firstName}>Valensco</span><span>Aurelius</span>
         </motion.h1>
         <motion.div
           className={styles.heroLinks}
-          initial={{ opacity: 0, y: 20 }}
+          initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.75, delay: 0.85 }}
+          transition={{ duration: 0.9, delay: 0.78, ease: [0.22, 1, 0.36, 1] }}
         >
           <a href="#contact">Contact</a>
           <a href="/resume" target="_blank" rel="noreferrer">Resume <Arrow diagonal /></a>
         </motion.div>
-        <motion.a
-          className={styles.scrollCue}
-          href="#about"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.7, delay: 1.25 }}
-          aria-label="Scroll to about section"
-        >
-          <span>Scroll</span><i aria-hidden="true">↓</i>
-        </motion.a>
       </section>
 
       <section className={`${styles.section} ${styles.about}`} id="about" aria-labelledby="about-title">
         <motion.div {...reveal} className={styles.sectionLabel}><span>01</span>About</motion.div>
         <motion.div {...reveal} className={styles.aboutCopy}>
-          <h2 id="about-title">I shape digital ideas into clear, useful experiences.</h2>
-          <p>My work sits between design and front-end development. I care about strong type, sharp interaction, and the details people feel before they notice.</p>
+          <h2 id="about-title">I turn digital ideas into clear, useful experiences.</h2>
+          <p>Design and front-end, handled as one craft.</p>
         </motion.div>
         <motion.div {...reveal} className={styles.aboutMeta}>
           <span>Independent designer &amp; developer</span>
@@ -253,8 +243,13 @@ export default function Portfolio() {
           <h2 id="projects-title">Built with intent.</h2>
         </motion.div>
         <div className={styles.projectList}>
-          {projects.map((project) => (
-            <motion.article key={project.slug} {...reveal} className={styles.projectCard}>
+          {projects.map((project, index) => (
+            <motion.article
+              key={project.slug}
+              {...reveal}
+              transition={{ ...reveal.transition, delay: index * 0.06 }}
+              className={styles.projectCard}
+            >
               <Link href={`/projects/${project.slug}`} aria-label={`View ${project.title} project`}>
                 <ProjectVisual project={project} />
                 <div className={styles.projectInfo}>
