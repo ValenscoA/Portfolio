@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { AnimatePresence, motion } from "motion/react";
 import Lenis from "lenis";
-import { useEffect, useState } from "react";
+import { type Dispatch, type SetStateAction, useEffect, useState } from "react";
 import styles from "./page.module.css";
 
 const navItems = [
@@ -67,7 +67,13 @@ function AmbientBackground() {
   );
 }
 
-function Nav({ openMenu }: { openMenu: () => void }) {
+function Nav({
+  isMenuOpen,
+  setIsMenuOpen,
+}: {
+  isMenuOpen: boolean;
+  setIsMenuOpen: Dispatch<SetStateAction<boolean>>;
+}) {
   return (
     <motion.header
       className={styles.navbar}
@@ -79,8 +85,15 @@ function Nav({ openMenu }: { openMenu: () => void }) {
       <a className={styles.monogram} href="#top" aria-label="Back to top">
         <span>VA</span><i />
       </a>
-      <button className={styles.menuButton} type="button" onClick={openMenu} aria-label="Open menu">
-        <span>Menu</span>
+      <button
+        className={styles.menuButton}
+        type="button"
+        onClick={() => setIsMenuOpen(prev => !prev)}
+        aria-label={isMenuOpen ? "Close menu" : "Open menu"}
+        aria-expanded={isMenuOpen}
+        aria-controls="site-menu"
+      >
+        <span>{isMenuOpen ? "Close" : "Menu"}</span>
         <span className={styles.menuLines} aria-hidden="true"><i /><i /></span>
       </button>
     </motion.header>
@@ -103,6 +116,7 @@ function Menu({ isOpen, closeMenu }: { isOpen: boolean; closeMenu: () => void })
     <AnimatePresence>
       {isOpen && (
         <motion.div
+          id="site-menu"
           className={styles.menuOverlay}
           initial={{ opacity: 0, backdropFilter: "blur(0px)" }}
           animate={{ opacity: 1, backdropFilter: "blur(18px)" }}
@@ -169,7 +183,7 @@ function ProjectVisual({ project }: { project: (typeof projects)[number] }) {
 }
 
 export default function Portfolio() {
-  const [menuOpen, setMenuOpen] = useState(false);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   useEffect(() => {
     const lenis = new Lenis({ duration: 1.15, smoothWheel: true, wheelMultiplier: 0.9 });
@@ -188,8 +202,8 @@ export default function Portfolio() {
   return (
     <main id="top" className={styles.page}>
       <AmbientBackground />
-      <Nav openMenu={() => setMenuOpen(true)} />
-      <Menu isOpen={menuOpen} closeMenu={() => setMenuOpen(false)} />
+      <Nav isMenuOpen={isMenuOpen} setIsMenuOpen={setIsMenuOpen} />
+      <Menu isOpen={isMenuOpen} closeMenu={() => setIsMenuOpen(false)} />
 
       <section className={styles.hero} aria-labelledby="hero-title">
         <motion.h1
