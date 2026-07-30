@@ -70,20 +70,19 @@ function AmbientBackground() {
 function Nav({ openMenu }: { openMenu: () => void }) {
   return (
     <motion.header
-      className={styles.navWrap}
-      initial={{ opacity: 0, y: -28 }}
-      animate={{ opacity: 1, y: 0 }}
+      className={styles.navbar}
+      initial={{ opacity: 0, top: -88 }}
+      animate={{ opacity: 1, top: 20 }}
       transition={{ duration: 0.8, delay: 0.15, ease: [0.22, 1, 0.36, 1] }}
+      aria-label="Primary navigation"
     >
-      <nav className={styles.nav} aria-label="Primary navigation">
-        <a className={styles.monogram} href="#top" aria-label="Back to top">
-          <span>VA</span><i />
-        </a>
-        <button className={styles.menuButton} type="button" onClick={openMenu} aria-label="Open menu">
-          <span>Menu</span>
-          <span className={styles.menuLines} aria-hidden="true"><i /><i /></span>
-        </button>
-      </nav>
+      <a className={styles.monogram} href="#top" aria-label="Back to top">
+        <span>VA</span><i />
+      </a>
+      <button className={styles.menuButton} type="button" onClick={openMenu} aria-label="Open menu">
+        <span>Menu</span>
+        <span className={styles.menuLines} aria-hidden="true"><i /><i /></span>
+      </button>
     </motion.header>
   );
 }

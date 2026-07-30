@@ -75,26 +75,25 @@
   100% { transform: translate3d(0, 2%, 0); }
 }
 
-.navWrap {
+.navbar {
   position: fixed;
-  top: 18px;
+  top: 20px;
   left: 50%;
-  z-index: 20;
-  width: var(--page);
   transform: translateX(-50%);
-}
-
-.nav {
-  height: 68px;
+  width: calc(100% - 40px);
+  max-width: none;
+  height: 88px;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 16px 0 25px;
+  padding: 0 32px;
+  box-sizing: border-box;
   border: 1px solid rgba(255, 255, 255, 0.14);
   border-radius: 999px;
   background: rgba(8, 10, 13, 0.58);
   box-shadow: 0 14px 60px rgba(0, 0, 0, 0.25), inset 0 1px rgba(255, 255, 255, 0.04);
   backdrop-filter: blur(18px);
+  z-index: 100;
 }
 
 .monogram {
@@ -253,24 +252,36 @@
 
 .heroLinks {
   display: flex;
-  gap: 28px;
+  align-items: center;
+  justify-content: center;
+  gap: 36px;
   margin-top: 54px;
 }
 
-.heroLinks a,
 .footer a,
 .contactMain h2 a {
   position: relative;
 }
 
 .heroLinks a {
-  padding: 8px 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
   color: var(--muted);
-  font-size: 15px;
-  transition: color 0.25s ease, transform 0.25s ease;
+  font: inherit;
+  font-size: 20px;
+  font-weight: 500;
+  line-height: 1;
+  text-decoration: none;
+  background-image: linear-gradient(currentColor, currentColor);
+  background-position: 0 100%;
+  background-repeat: no-repeat;
+  background-size: 0 1px;
+  transition: color 0.25s ease, background-size 0.35s ease;
 }
 
-.heroLinks a::after,
 .footer a::after,
 .contactMain h2 a::after {
   content: "";
@@ -287,14 +298,19 @@
 
 .heroLinks a:hover {
   color: white;
-  transform: translateY(-3px);
+  background-size: 100% 1px;
 }
 
-.heroLinks a:hover::after,
 .footer a:hover::after,
 .contactMain h2 a:hover::after {
   transform: scaleX(1);
   transform-origin: left;
+}
+
+.heroLinks a span {
+  display: inline-flex;
+  align-items: center;
+  line-height: 1;
 }
 
 .scrollCue {
@@ -622,8 +638,7 @@
 
 @media (max-width: 640px) {
   :global(:root) { --page: calc(100vw - 36px); }
-  .navWrap { top: 12px; }
-  .nav { height: 58px; padding-left: 19px; }
+  .navbar { height: 64px; padding: 0 18px; }
   .menuButton { height: 40px; padding: 0 13px 0 16px; }
   .hero { min-height: 100svh; padding-inline: 18px; }
   .hero h1 { font-size: clamp(4rem, 19vw, 6.3rem); line-height: 0.86; }
