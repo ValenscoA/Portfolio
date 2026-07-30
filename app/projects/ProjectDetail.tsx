@@ -54,8 +54,8 @@ export default function ProjectDetail({ project }: { project: Project }) {
       </motion.section>
 
       <section className={styles.content}>
-        <motion.p {...enter} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}>{project.intro}</motion.p>
-        <motion.div {...enter} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className={styles.details}>
+        <motion.p {...enter} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: false }}>{project.intro}</motion.p>
+        <motion.div {...enter} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: false }} className={styles.details}>
           <div><span>Context</span><p>{project.challenge}</p></div>
           <div><span>Result</span><p>{project.outcome}</p></div>
         </motion.div>
