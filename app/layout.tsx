@@ -1,0 +1,31 @@
+import type { Metadata } from "next";
+import "./globals.css";
+
+export const metadata: Metadata = {
+  metadataBase: new URL("https://valensco-aurelius.sites.openai.com"),
+  title: {
+    default: "Valensco Aurelius",
+    template: "%s — Valensco Aurelius",
+  },
+  description: "A focused portfolio of digital products, interfaces, and front-end work.",
+  openGraph: {
+    title: "Valensco Aurelius",
+    description: "Selected digital products, interfaces, and front-end work.",
+    type: "website",
+    images: [{ url: "/og.png", width: 1792, height: 1024, alt: "Valensco Aurelius portfolio" }],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Valensco Aurelius",
+    description: "Selected digital products, interfaces, and front-end work.",
+    images: ["/og.png"],
+  },
+};
+
+export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
+  return (
+    <html lang="en">
+      <body>{children}</body>
+    </html>
+  );
+}
