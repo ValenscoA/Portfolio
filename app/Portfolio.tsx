@@ -256,82 +256,157 @@ function ProjectVisual({ project }: { project: (typeof projects)[number] }) {
 function AboutSection() {
   const sectionRef = useRef<HTMLElement>(null);
   const slideIndexRef = useRef(0);
-  const isAnimating = useRef(false);
+  const phaseRef = useRef<"IDLE" | "TRANSITIONING" | "SETTLED">("IDLE");
   const accumulatedDelta = useRef(0);
-  const gestureConsumed = useRef(false);
+  const wheelGestureConsumed = useRef(false);
+  const touchGestureConsumed = useRef(false);
   const wheelIdleTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const animationTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const touchStartY = useRef<number | null>(null);
+  const cooldownTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const touchLastY = useRef<number | null>(null);
   const prefersReducedMotion = useReducedMotion();
   const [slideIndex, setSlideIndex] = useState(0);
-  const [direction, setDirection] = useState(1);
+  const [phase, setPhase] = useState<"IDLE" | "TRANSITIONING" | "SETTLED">("IDLE");
 
-  const changeSlide = useCallback((step: number) => {
-    if (isAnimating.current) return false;
-    const nextIndex = Math.min(aboutBlocks.length - 1, Math.max(0, slideIndexRef.current + step));
-    if (nextIndex === slideIndexRef.current) return false;
+  const updatePhase = useCallback((nextPhase: "IDLE" | "TRANSITIONING" | "SETTLED") => {
+    phaseRef.current = nextPhase;
+    setPhase(nextPhase);
+  }, []);
 
-    isAnimating.current = true;
-    setDirection(step);
+  const advanceSlide = useCallback(() => {
+    if (phaseRef.current !== "IDLE" || slideIndexRef.current >= aboutBlocks.length - 1) return false;
+    const nextIndex = slideIndexRef.current + 1;
+
+    updatePhase("TRANSITIONING");
     slideIndexRef.current = nextIndex;
     setSlideIndex(nextIndex);
 
+    const section = sectionRef.current;
+    if (section) {
+      const sectionTop = window.scrollY + section.getBoundingClientRect().top;
+      window.scrollTo({ top: sectionTop + nextIndex * window.innerHeight, behavior: "auto" });
+    }
+
     if (animationTimer.current) clearTimeout(animationTimer.current);
     animationTimer.current = setTimeout(() => {
-      isAnimating.current = false;
-      accumulatedDelta.current = 0;
-    }, prefersReducedMotion ? 240 : 720);
+      updatePhase("SETTLED");
+      if (cooldownTimer.current) clearTimeout(cooldownTimer.current);
+      cooldownTimer.current = setTimeout(() => {
+        accumulatedDelta.current = 0;
+        updatePhase("IDLE");
+      }, prefersReducedMotion ? 80 : 200);
+    }, prefersReducedMotion ? 140 : 620);
     return true;
-  }, [prefersReducedMotion]);
+  }, [prefersReducedMotion, updatePhase]);
 
   useEffect(() => {
     const section = sectionRef.current;
     if (!section) return;
 
-    const handleWheel = (event: WheelEvent) => {
+    const isPinned = () => {
       const bounds = section.getBoundingClientRect();
-      const isVisible = bounds.top < window.innerHeight * 0.8 && bounds.bottom > window.innerHeight * 0.2;
-      if (!isVisible || Math.abs(event.deltaY) < 1) return;
+      return bounds.top <= 1 && bounds.bottom >= window.innerHeight - 1;
+    };
 
-      if (wheelIdleTimer.current) clearTimeout(wheelIdleTimer.current);
-      wheelIdleTimer.current = setTimeout(() => {
-        gestureConsumed.current = false;
-        accumulatedDelta.current = 0;
-      }, 220);
+    const handleWheel = (event: WheelEvent) => {
+      if (!isPinned()) return;
 
-      if (isAnimating.current || gestureConsumed.current) {
+      if (event.deltaY > 0) {
+        if (wheelIdleTimer.current) clearTimeout(wheelIdleTimer.current);
+        wheelIdleTimer.current = setTimeout(() => {
+          wheelGestureConsumed.current = false;
+          accumulatedDelta.current = 0;
+        }, 220);
+      }
+
+      if (phaseRef.current !== "IDLE") {
         event.preventDefault();
         event.stopPropagation();
         return;
       }
 
-      const step = event.deltaY > 0 ? 1 : -1;
-      const canMove = step > 0
-        ? slideIndexRef.current < aboutBlocks.length - 1
-        : slideIndexRef.current > 0;
-      if (!canMove) return;
+      if (event.deltaY <= 0) {
+        accumulatedDelta.current = 0;
+        return;
+      }
+
+      if (wheelGestureConsumed.current) {
+        event.preventDefault();
+        event.stopPropagation();
+        return;
+      }
+
+      if (slideIndexRef.current >= aboutBlocks.length - 1) return;
 
       event.preventDefault();
       event.stopPropagation();
 
+      if (event.deltaY < 1.5) return;
       accumulatedDelta.current += event.deltaY;
-      if (Math.abs(accumulatedDelta.current) < 70) return;
+      if (accumulatedDelta.current < 80) return;
 
-      gestureConsumed.current = true;
+      wheelGestureConsumed.current = true;
       accumulatedDelta.current = 0;
-      changeSlide(step);
+      advanceSlide();
+    };
+
+    const handleTouchStart = (event: TouchEvent) => {
+      touchLastY.current = event.touches[0]?.clientY ?? null;
+      touchGestureConsumed.current = false;
+      accumulatedDelta.current = 0;
+    };
+
+    const handleTouchMove = (event: TouchEvent) => {
+      if (!isPinned() || touchLastY.current === null) return;
+      const currentY = event.touches[0]?.clientY ?? touchLastY.current;
+      const delta = touchLastY.current - currentY;
+      touchLastY.current = currentY;
+
+      if (phaseRef.current !== "IDLE" || touchGestureConsumed.current) {
+        event.preventDefault();
+        return;
+      }
+
+      if (delta <= 0) {
+        accumulatedDelta.current = 0;
+        return;
+      }
+
+      if (slideIndexRef.current >= aboutBlocks.length - 1) return;
+
+      event.preventDefault();
+      if (delta < 1.5) return;
+      accumulatedDelta.current += delta;
+      if (accumulatedDelta.current < 80) return;
+
+      touchGestureConsumed.current = true;
+      accumulatedDelta.current = 0;
+      advanceSlide();
+    };
+
+    const handleTouchEnd = () => {
+      touchLastY.current = null;
+      accumulatedDelta.current = 0;
     };
 
     section.addEventListener("wheel", handleWheel, { passive: false });
+    section.addEventListener("touchstart", handleTouchStart, { passive: true });
+    section.addEventListener("touchmove", handleTouchMove, { passive: false });
+    section.addEventListener("touchend", handleTouchEnd, { passive: true });
+    section.addEventListener("touchcancel", handleTouchEnd, { passive: true });
     return () => {
       section.removeEventListener("wheel", handleWheel);
+      section.removeEventListener("touchstart", handleTouchStart);
+      section.removeEventListener("touchmove", handleTouchMove);
+      section.removeEventListener("touchend", handleTouchEnd);
+      section.removeEventListener("touchcancel", handleTouchEnd);
       if (wheelIdleTimer.current) clearTimeout(wheelIdleTimer.current);
       if (animationTimer.current) clearTimeout(animationTimer.current);
+      if (cooldownTimer.current) clearTimeout(cooldownTimer.current);
     };
-  }, [changeSlide]);
+  }, [advanceSlide]);
 
   const activeSlide = aboutBlocks[slideIndex];
-  const slideOffset = prefersReducedMotion ? 0 : 52;
 
   return (
     <section
@@ -340,51 +415,37 @@ function AboutSection() {
       id="about"
       aria-labelledby="about-title"
     >
-      <motion.div {...reveal} className={styles.aboutPortraitIntro}>
-        <div className={styles.sectionLabel}><span>01</span>About</div>
-        <h2 id="about-title">A little about me.</h2>
-        <p>I enjoy turning ideas into thoughtful products that work in the real world.</p>
-      </motion.div>
+      <div className={styles.aboutPinned}>
+        <motion.div {...reveal} className={styles.aboutPortraitIntro}>
+          <div className={styles.sectionLabel}><span>01</span>About</div>
+          <h2 id="about-title">A little about me.</h2>
+          <p>I enjoy turning ideas into thoughtful products that work in the real world.</p>
+        </motion.div>
 
-      <motion.div {...reveal} className={styles.portraitCardShell}>
-        <div
-          className={styles.portraitCard}
-          onTouchStart={(event) => {
-            touchStartY.current = event.touches[0]?.clientY ?? null;
-          }}
-          onTouchCancel={() => {
-            touchStartY.current = null;
-          }}
-          onTouchEnd={(event) => {
-            if (touchStartY.current === null) return;
-            const endY = event.changedTouches[0]?.clientY ?? touchStartY.current;
-            const distance = touchStartY.current - endY;
-            touchStartY.current = null;
-            if (Math.abs(distance) >= 44) changeSlide(distance > 0 ? 1 : -1);
-          }}
-        >
-          <div className={styles.portraitMedia} role="img" aria-label="Portrait placeholder">
-            <div className={styles.portraitPlaceholder}><span>Portrait</span></div>
-          </div>
+        <motion.div {...reveal} className={styles.portraitCardShell}>
+          <div className={styles.portraitCard} aria-busy={phase !== "IDLE"}>
+            <div className={styles.portraitMedia} role="img" aria-label="Portrait placeholder">
+              <div className={styles.portraitPlaceholder}><span>Portrait</span></div>
+            </div>
 
-          <div className={styles.aboutInfoViewport} aria-live="polite">
-            <AnimatePresence initial={false} custom={direction} mode="wait">
-              <motion.article
-                key={activeSlide.number}
-                className={styles.aboutInfoSlide}
-                custom={direction}
-                initial={{ opacity: 0, x: direction > 0 ? slideOffset : -slideOffset }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: direction > 0 ? -slideOffset : slideOffset }}
-                transition={{ duration: prefersReducedMotion ? 0.12 : 0.34, ease: [0.22, 1, 0.36, 1] }}
-              >
-                <header><span>{activeSlide.number}</span><span>{activeSlide.label}</span></header>
-                <div>{activeSlide.lines.map((line) => <p key={line}>{line}</p>)}</div>
-              </motion.article>
-            </AnimatePresence>
+            <div className={styles.aboutInfoViewport} aria-live="polite">
+              <AnimatePresence initial={false} mode="sync">
+                <motion.article
+                  key={activeSlide.number}
+                  className={styles.aboutInfoSlide}
+                  initial={{ opacity: prefersReducedMotion ? 0 : 0.72, x: prefersReducedMotion ? 0 : "100%" }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: prefersReducedMotion ? 0 : 0.72, x: prefersReducedMotion ? 0 : "-100%" }}
+                  transition={{ duration: prefersReducedMotion ? 0.12 : 0.62, ease: [0.22, 1, 0.36, 1] }}
+                >
+                  <header><span>{activeSlide.number}</span><span>{activeSlide.label}</span></header>
+                  <div>{activeSlide.lines.map((line) => <p key={line}>{line}</p>)}</div>
+                </motion.article>
+              </AnimatePresence>
+            </div>
           </div>
-        </div>
-      </motion.div>
+        </motion.div>
+      </div>
     </section>
   );
 }

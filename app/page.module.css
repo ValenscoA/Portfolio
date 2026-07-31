@@ -346,13 +346,24 @@
 }
 
 .aboutPortraitSection {
-  min-height: 112svh;
+  position: relative;
+  height: 400svh;
+  min-height: 400svh;
+  padding: 0;
+  border-top: 1px solid var(--line);
+}
+
+.aboutPinned {
+  position: sticky;
+  top: 0;
+  width: 100%;
+  height: 100svh;
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
   align-items: center;
   gap: clamp(72px, 9vw, 160px);
-  padding-block: clamp(130px, 13vw, 190px);
-  border-top: 1px solid var(--line);
+  padding: clamp(90px, 9vw, 130px) 0 clamp(48px, 6vw, 86px);
+  box-sizing: border-box;
 }
 
 .aboutPortraitIntro {
@@ -831,13 +842,14 @@
 @media (max-width: 900px) {
   .hero h1 { white-space: normal; }
   .skills { grid-template-columns: 1fr; }
-  .aboutPortraitSection {
-    min-height: auto;
+  .aboutPinned {
     grid-template-columns: 1fr;
-    gap: 82px;
+    align-content: center;
+    gap: 42px;
+    padding-block: 92px 34px;
   }
   .portraitCardShell {
-    width: min(100%, 430px);
+    width: min(100%, 390px);
     justify-self: center;
   }
   .skillsLayout { grid-column: 1; }
@@ -860,7 +872,8 @@
   .hero h1 span { display: block; }
   .heroLinks { gap: 28px; margin-top: 36px; }
   .section { padding: 140px 0; }
-  .aboutPortraitSection { padding-block: 120px; }
+  .aboutPortraitSection { padding: 0; }
+  .aboutPinned { padding-block: 82px 24px; gap: 30px; }
   .technologies { padding-block: 84px; }
   .technologyLabel { margin-bottom: 36px; }
   .marqueeList {
@@ -872,8 +885,9 @@
     font-size: clamp(2.2rem, 12vw, 3.8rem);
   }
   .aboutPortraitIntro h2, .skillsLayout h2 { font-size: clamp(3.2rem, 14vw, 4.8rem); }
-  .aboutPortraitIntro h2 { margin-top: 42px; }
-  .aboutPortraitIntro p { margin-top: 26px; font-size: 0.96rem; }
+  .aboutPortraitIntro h2 { margin-top: 28px; }
+  .aboutPortraitIntro p { margin-top: 18px; font-size: 0.92rem; }
+  .portraitCardShell { width: min(100%, 340px); }
   .portraitCard { border-radius: 18px; }
   .aboutInfoSlide { padding: 20px; }
   .aboutInfoSlide p { font-size: clamp(0.94rem, 4.3vw, 1.1rem); }
