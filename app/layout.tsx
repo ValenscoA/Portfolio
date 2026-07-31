@@ -8,6 +8,10 @@ export const metadata: Metadata = {
     template: "%s — Valensco Aurelius",
   },
   description: "A focused portfolio of digital products, interfaces, and front-end work.",
+  icons: {
+    icon: [{ url: "/images/valensco-logo.svg", type: "image/svg+xml" }],
+    shortcut: "/images/valensco-logo.svg",
+  },
   openGraph: {
     title: "Valensco Aurelius",
     description: "Selected digital products, interfaces, and front-end work.",
