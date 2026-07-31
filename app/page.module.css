@@ -602,12 +602,6 @@
   content: "";
 }
 
-.marquee:hover .marqueeTrack,
-.marquee:focus .marqueeTrack,
-.marquee:focus-within .marqueeTrack {
-  animation-play-state: paused;
-}
-
 .srOnly {
   position: absolute;
   width: 1px;

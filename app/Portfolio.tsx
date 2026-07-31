@@ -504,8 +504,6 @@ function TechnologyMarquee() {
       <motion.div
         {...reveal}
         className={styles.marquee}
-        tabIndex={0}
-        aria-label="Technologies marquee. Focus to pause the animation."
       >
         <ul className={styles.srOnly}>
           {technologies.map((technology) => <li key={technology}>{technology}</li>)}
