@@ -1,7 +1,14 @@
 "use client";
 
 import Link from "next/link";
-import { AnimatePresence, motion, useReducedMotion, useScroll, useTransform } from "motion/react";
+import {
+  AnimatePresence,
+  motion,
+  type MotionValue,
+  useReducedMotion,
+  useScroll,
+  useTransform,
+} from "motion/react";
 import Lenis from "lenis";
 import {
   type Dispatch,
@@ -51,7 +58,7 @@ const aboutBlocks = [
   {
     number: "01",
     label: "ABOUT",
-    lines: ["Computer Science student passionate about creating useful software and technology."],
+    lines: ["Computer Science student passionate about building useful software."],
   },
   {
     number: "02",
@@ -66,7 +73,7 @@ const aboutBlocks = [
   {
     number: "04",
     label: "CURRENTLY",
-    lines: ["Learning, experimenting, and building projects."],
+    lines: ["Building projects.", "Learning new technologies.", "Preparing for internships."],
   },
 ];
 
@@ -248,33 +255,50 @@ function ProjectVisual({ project }: { project: (typeof projects)[number] }) {
   );
 }
 
+const panelMotion = [
+  { input: [0, 0.13, 0.18], opacity: [1, 1, 0], y: [0, 0, -72] },
+  { input: [0.13, 0.18, 0.46, 0.51], opacity: [0, 1, 1, 0], y: [72, 0, 0, -72] },
+  { input: [0.46, 0.51, 0.79, 0.84], opacity: [0, 1, 1, 0], y: [72, 0, 0, -72] },
+  { input: [0.79, 0.84, 1], opacity: [0, 1, 1], y: [72, 0, 0] },
+];
+
+function AboutPanel({
+  block,
+  index,
+  progress,
+}: {
+  block: (typeof aboutBlocks)[number];
+  index: number;
+  progress: MotionValue<number>;
+}) {
+  const prefersReducedMotion = useReducedMotion();
+  const range = panelMotion[index];
+  const opacity = useTransform(progress, range.input, range.opacity);
+  const y = useTransform(progress, range.input, range.y);
+
+  return (
+    <motion.article
+      className={styles.aboutPanel}
+      style={prefersReducedMotion ? undefined : { opacity, y }}
+      aria-labelledby={`about-panel-${block.number}`}
+    >
+      <div className={styles.aboutPanelInner}>
+        <header>
+          <span>{block.number}</span>
+          <h3 id={`about-panel-${block.number}`}>{block.label}</h3>
+        </header>
+        <div>{block.lines.map((line) => <p key={line}>{line}</p>)}</div>
+      </div>
+    </motion.article>
+  );
+}
+
 function AboutSection() {
   const sectionRef = useRef<HTMLElement>(null);
-  const prefersReducedMotion = useReducedMotion();
-  const [isMobile, setIsMobile] = useState(false);
   const { scrollYProgress } = useScroll({
     target: sectionRef,
-    offset: ["start end", "end start"],
+    offset: ["start start", "end end"],
   });
-  const headingY = useTransform(scrollYProgress, [0, 1], [48, -48]);
-  const firstBlockY = useTransform(scrollYProgress, [0, 1], [84, -84]);
-  const secondBlockY = useTransform(scrollYProgress, [0, 1], [116, -116]);
-  const thirdBlockY = useTransform(scrollYProgress, [0, 1], [98, -98]);
-  const fourthBlockY = useTransform(scrollYProgress, [0, 1], [132, -132]);
-  const decorationY = useTransform(scrollYProgress, [0, 1], [180, -180]);
-  const blockTransforms = [firstBlockY, secondBlockY, thirdBlockY, fourthBlockY];
-
-  useEffect(() => {
-    const mediaQuery = window.matchMedia("(max-width: 900px)");
-    const updateViewport = () => setIsMobile(mediaQuery.matches);
-    updateViewport();
-    mediaQuery.addEventListener("change", updateViewport);
-    return () => {
-      mediaQuery.removeEventListener("change", updateViewport);
-    };
-  }, []);
-
-  const useParallax = !isMobile && !prefersReducedMotion;
 
   return (
     <section
@@ -283,35 +307,14 @@ function AboutSection() {
       id="about"
       aria-labelledby="about-title"
     >
+      <h2 id="about-title" className={styles.srOnly}>About</h2>
+      <div className={styles.aboutSnapPoints} aria-hidden="true">
+        {aboutBlocks.map((block) => <span key={block.number} />)}
+      </div>
       <div className={styles.aboutSticky}>
-        <motion.div className={styles.aboutNarrative} style={useParallax ? { y: headingY } : undefined}>
-          <div className={styles.sectionLabel}><span>01</span>About</div>
-          <h2 id="about-title">Building software, hardware,<br />and experiences through code.</h2>
-          <p>I&apos;m a Computer Science student who enjoys turning ideas into useful, thoughtfully made technology.</p>
-        </motion.div>
-
-        <div className={styles.aboutBlocks}>
-          {aboutBlocks.map((block, index) => (
-            <motion.article
-              key={block.number}
-              className={styles.aboutBlock}
-              style={useParallax ? { y: blockTransforms[index] } : undefined}
-              initial={isMobile ? { opacity: 0, y: 22 } : { opacity: 0 }}
-              whileInView={isMobile ? { opacity: 1, y: 0 } : { opacity: 1 }}
-              viewport={{ once: false, amount: 0.35 }}
-              transition={{ duration: 0.75, delay: index * 0.05, ease: [0.22, 1, 0.36, 1] }}
-            >
-              <header><span>{block.number}</span><span>{block.label}</span></header>
-              <div>{block.lines.map((line) => <p key={line}>{line}</p>)}</div>
-            </motion.article>
-          ))}
-        </div>
-
-        <motion.div
-          className={styles.aboutDecoration}
-          style={useParallax ? { y: decorationY } : undefined}
-          aria-hidden="true"
-        ><span /><span /></motion.div>
+        {aboutBlocks.map((block, index) => (
+          <AboutPanel key={block.number} block={block} index={index} progress={scrollYProgress} />
+        ))}
       </div>
     </section>
   );
