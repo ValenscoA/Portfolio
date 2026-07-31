@@ -236,10 +236,11 @@
   margin: 0;
   max-width: 1600px;
   text-align: center;
-  font-size: clamp(4.5rem, 11.25vw, 12.25rem);
-  font-weight: 800;
-  line-height: 0.82;
-  letter-spacing: -0.07em;
+  font-family: var(--font-instrument-serif);
+  font-size: clamp(4.5rem, 10.9vw, 11.8rem);
+  font-weight: 400;
+  line-height: 0.84;
+  letter-spacing: -0.045em;
   white-space: nowrap;
 }
 
@@ -627,7 +628,7 @@
   .brandLogo { width: 26px; }
   .menuButton { height: 36px; padding: 0 13px; }
   .hero { min-height: 100svh; padding-inline: 18px; }
-  .hero h1 { flex-direction: column; gap: 0; font-size: clamp(4.3rem, 20vw, 6.8rem); line-height: 0.82; }
+  .hero h1 { flex-direction: column; gap: 0; font-size: clamp(4.3rem, 20vw, 6.8rem); line-height: 0.84; }
   .hero h1 span { display: block; }
   .heroLinks { gap: 28px; margin-top: 36px; }
   .section { padding: 140px 0; }

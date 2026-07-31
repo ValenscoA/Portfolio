@@ -1,5 +1,13 @@
 import type { Metadata } from "next";
+import { Instrument_Serif } from "next/font/google";
 import "./globals.css";
+
+const instrumentSerif = Instrument_Serif({
+  weight: "400",
+  subsets: ["latin"],
+  display: "swap",
+  variable: "--font-instrument-serif",
+});
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://valensco-aurelius.sites.openai.com"),
@@ -29,7 +37,7 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="en">
-      <body>{children}</body>
+      <body className={instrumentSerif.variable}>{children}</body>
     </html>
   );
 }
