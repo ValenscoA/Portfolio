@@ -1,10 +1,16 @@
 import Link from "next/link";
+import BrandLogo from "../components/BrandLogo";
 import styles from "./resume.module.css";
 
 export default function ResumePage() {
   return (
     <main className={styles.page}>
-      <header><Link href="/">VA.</Link><Link href="/">Back home</Link></header>
+      <header>
+        <Link href="/" aria-label="Back to portfolio">
+          <BrandLogo className={styles.brandLogo} />
+        </Link>
+        <Link href="/">Back home</Link>
+      </header>
       <section>
         <p>Valensco Aurelius</p>
         <h1>Designer &amp;<br />front-end developer.</h1>

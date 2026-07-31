@@ -99,21 +99,17 @@
 }
 
 .monogram {
-  position: relative;
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  gap: 11px;
-  font-size: 17px;
-  font-weight: 750;
-  letter-spacing: -0.04em;
+  justify-content: center;
+  line-height: 0;
 }
 
-.monogram i {
-  width: 5px;
-  height: 5px;
-  border-radius: 50%;
-  background: var(--accent);
-  box-shadow: 0 0 12px var(--accent);
+.brandLogo {
+  display: block;
+  width: 32px;
+  height: auto;
+  flex: 0 0 auto;
 }
 
 .menuButton,
@@ -169,11 +165,6 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-}
-
-.overlayMark {
-  font-weight: 800;
-  font-size: 22px;
 }
 
 .closeButton {
@@ -633,6 +624,7 @@
 @media (max-width: 640px) {
   :global(:root) { --page: calc(100vw - 36px); }
   .navbar { height: 60px; padding: 0 16px; }
+  .brandLogo { width: 26px; }
   .menuButton { height: 36px; padding: 0 13px; }
   .hero { min-height: 100svh; padding-inline: 18px; }
   .hero h1 { flex-direction: column; gap: 0; font-size: clamp(4.3rem, 20vw, 6.8rem); line-height: 0.82; }

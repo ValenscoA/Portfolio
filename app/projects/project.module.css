@@ -45,7 +45,8 @@
   font-size: 14px;
 }
 
-.nav > a:first-child { font-size: 18px; font-weight: 800; }
+.nav > a:first-child { display: inline-flex; align-items: center; line-height: 0; }
+.brandLogo { display: block; width: 32px; height: auto; }
 .nav > a:last-child { display: flex; align-items: center; gap: 10px; color: var(--muted); }
 .nav > a:last-child span { color: white; font-size: 24px; font-weight: 200; }
 
@@ -163,6 +164,7 @@
 .next a:hover i { transform: translateX(10px); }
 
 @media (max-width: 760px) {
+  .brandLogo { width: 26px; }
   .hero { min-height: 54vh; padding-bottom: 48px; }
   .hero h1 { font-size: clamp(5rem, 24vw, 8.5rem); }
   .kicker { margin-bottom: 30px; }

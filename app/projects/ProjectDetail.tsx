@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { motion } from "motion/react";
+import BrandLogo from "../components/BrandLogo";
 import styles from "./project.module.css";
 
 export type Project = {
@@ -28,7 +29,9 @@ export default function ProjectDetail({ project }: { project: Project }) {
     <main className={styles.page} style={{ "--project-accent": project.accent } as React.CSSProperties}>
       <div className={styles.ambient} aria-hidden="true" />
       <motion.header {...enter} className={styles.nav}>
-        <Link href="/" aria-label="Back to portfolio">VA.</Link>
+        <Link href="/" aria-label="Back to portfolio">
+          <BrandLogo className={styles.brandLogo} />
+        </Link>
         <Link href="/#projects">Close <span aria-hidden="true">×</span></Link>
       </motion.header>
 

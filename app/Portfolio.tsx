@@ -4,6 +4,7 @@ import Link from "next/link";
 import { AnimatePresence, motion } from "motion/react";
 import Lenis from "lenis";
 import { type Dispatch, type SetStateAction, useEffect, useState } from "react";
+import BrandLogo from "./components/BrandLogo";
 import styles from "./page.module.css";
 
 const navItems = [
@@ -101,7 +102,7 @@ function Nav({
       aria-label="Primary navigation"
     >
       <a className={styles.monogram} href="#top" aria-label="Back to top">
-        <span>VA</span><i />
+        <BrandLogo className={styles.brandLogo} priority />
       </a>
       <button
         className={styles.menuButton}
@@ -145,7 +146,7 @@ function Menu({ isOpen, closeMenu }: { isOpen: boolean; closeMenu: () => void })
           aria-label="Site menu"
         >
           <div className={styles.overlayTop}>
-            <span className={styles.overlayMark}>VA.</span>
+            <BrandLogo className={styles.brandLogo} />
             <button type="button" onClick={closeMenu} className={styles.closeButton} aria-label="Close menu">
               Close <span aria-hidden="true">×</span>
             </button>
