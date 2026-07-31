@@ -1,17 +1,15 @@
 "use client";
 
 import Link from "next/link";
-import { AnimatePresence, motion, useAnimate, useReducedMotion } from "motion/react";
+import { AnimatePresence, motion, useReducedMotion, useScroll, useTransform } from "motion/react";
 import Lenis from "lenis";
 import {
   type Dispatch,
   type SetStateAction,
-  useCallback,
   useEffect,
   useRef,
   useState,
 } from "react";
-import { flushSync } from "react-dom";
 import BrandLogo from "./components/BrandLogo";
 import styles from "./page.module.css";
 
@@ -49,22 +47,26 @@ const projects = [
   },
 ];
 
-const aboutCards = [
+const aboutBlocks = [
   {
+    number: "01",
     label: "ABOUT",
-    lines: ["Computer Science student passionate about building useful software and hardware."],
+    lines: ["Computer Science student passionate about creating useful software and technology."],
   },
   {
+    number: "02",
     label: "LOCATION",
     lines: ["Based in Malaysia."],
   },
   {
+    number: "03",
     label: "FOCUS",
     lines: ["Software Engineering", "UI Design", "Embedded Systems"],
   },
   {
+    number: "04",
     label: "CURRENTLY",
-    lines: ["Building projects.", "Learning new technologies.", "Preparing for internships."],
+    lines: ["Learning, experimenting, and building projects."],
   },
 ];
 
@@ -85,12 +87,6 @@ const technologies = [
   "Arduino",
   "Raspberry Pi",
 ];
-
-const SCROLL_THRESHOLD = 70;
-const ANIMATION_DURATION = 600;
-const WHEEL_IDLE_DURATION = 180;
-const MIN_WHEEL_DELTA = 1;
-const FLIP_HALF_DURATION = ANIMATION_DURATION / 2000;
 
 const reveal = {
   initial: { opacity: 0, y: 18 },
@@ -252,232 +248,71 @@ function ProjectVisual({ project }: { project: (typeof projects)[number] }) {
   );
 }
 
-function CardArrow({ direction }: { direction: "previous" | "next" }) {
-  return (
-    <svg
-      aria-hidden="true"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.6"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <path d={direction === "previous" ? "m15 18-6-6 6-6" : "m9 18 6-6-6-6"} />
-    </svg>
-  );
-}
-
-type FlipPhase = "IDLE" | "FLIPPING" | "SETTLING";
-
-function IdentityCard() {
+function AboutSection() {
   const sectionRef = useRef<HTMLElement>(null);
-  const cardIndexRef = useRef(0);
-  const phaseRef = useRef<FlipPhase>("IDLE");
-  const touchStartY = useRef<number | null>(null);
-  const accumulatedDelta = useRef(0);
-  const wheelGestureConsumed = useRef(false);
-  const wheelIdleTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const [cardScope, animateCard] = useAnimate();
   const prefersReducedMotion = useReducedMotion();
-  const [cardIndex, setCardIndex] = useState(0);
-  const [progressIndex, setProgressIndex] = useState(0);
-  const [flipPhase, setFlipPhase] = useState<FlipPhase>("IDLE");
-
-  const updatePhase = useCallback((nextPhase: FlipPhase) => {
-    phaseRef.current = nextPhase;
-    setFlipPhase(nextPhase);
-  }, []);
-
-  const runFlip = useCallback(async (step: number) => {
-    if (phaseRef.current !== "IDLE") return false;
-
-    const nextIndex = Math.min(
-      aboutCards.length - 1,
-      Math.max(0, cardIndexRef.current + step),
-    );
-    if (nextIndex === cardIndexRef.current) return false;
-
-    updatePhase("FLIPPING");
-
-    try {
-      if (prefersReducedMotion) {
-        await animateCard(cardScope.current, { opacity: 0 }, {
-          duration: 0.16,
-          ease: "easeOut",
-        });
-      } else {
-        await animateCard(cardScope.current, {
-          opacity: 0.84,
-          rotateX: step > 0 ? -90 : 90,
-        }, {
-          duration: FLIP_HALF_DURATION,
-          ease: [0.22, 1, 0.36, 1],
-        });
-      }
-
-      flushSync(() => {
-        cardIndexRef.current = nextIndex;
-        setCardIndex(nextIndex);
-      });
-
-      await animateCard(cardScope.current, prefersReducedMotion
-        ? { opacity: 0, rotateX: 0 }
-        : { opacity: 0.84, rotateX: step > 0 ? 90 : -90 }, {
-        duration: 0,
-      });
-
-      updatePhase("SETTLING");
-
-      await animateCard(cardScope.current, { opacity: 1, rotateX: 0 }, {
-        duration: prefersReducedMotion ? 0.16 : FLIP_HALF_DURATION,
-        ease: [0.22, 1, 0.36, 1],
-      });
-
-      setProgressIndex(nextIndex);
-      return true;
-    } finally {
-      await animateCard(cardScope.current, { opacity: 1, rotateX: 0 }, { duration: 0 });
-      accumulatedDelta.current = 0;
-      updatePhase("IDLE");
-    }
-  }, [animateCard, cardScope, prefersReducedMotion, updatePhase]);
+  const [isMobile, setIsMobile] = useState(false);
+  const { scrollYProgress } = useScroll({
+    target: sectionRef,
+    offset: ["start end", "end start"],
+  });
+  const headingY = useTransform(scrollYProgress, [0, 1], [48, -48]);
+  const firstBlockY = useTransform(scrollYProgress, [0, 1], [84, -84]);
+  const secondBlockY = useTransform(scrollYProgress, [0, 1], [116, -116]);
+  const thirdBlockY = useTransform(scrollYProgress, [0, 1], [98, -98]);
+  const fourthBlockY = useTransform(scrollYProgress, [0, 1], [132, -132]);
+  const decorationY = useTransform(scrollYProgress, [0, 1], [180, -180]);
+  const blockTransforms = [firstBlockY, secondBlockY, thirdBlockY, fourthBlockY];
 
   useEffect(() => {
-    const section = sectionRef.current;
-    if (!section) return;
-
-    const markWheelActivity = () => {
-      if (wheelIdleTimer.current) clearTimeout(wheelIdleTimer.current);
-      wheelIdleTimer.current = setTimeout(() => {
-        accumulatedDelta.current = 0;
-        wheelGestureConsumed.current = false;
-      }, WHEEL_IDLE_DURATION);
-    };
-
-    const onWheel = (event: WheelEvent) => {
-      const bounds = section.getBoundingClientRect();
-      const isActive = bounds.top < window.innerHeight * 0.75
-        && bounds.bottom > window.innerHeight * 0.25;
-
-      if (!isActive) return;
-
-      if (phaseRef.current !== "IDLE") {
-        event.preventDefault();
-        event.stopPropagation();
-        return;
-      }
-
-      if (event.deltaY <= 0) {
-        accumulatedDelta.current = 0;
-        return;
-      }
-
-      if (cardIndexRef.current >= aboutCards.length - 1) {
-        accumulatedDelta.current = 0;
-        return;
-      }
-
-      event.preventDefault();
-      event.stopPropagation();
-
-      if (event.deltaY < MIN_WHEEL_DELTA) return;
-
-      markWheelActivity();
-      if (wheelGestureConsumed.current) return;
-
-      accumulatedDelta.current += event.deltaY;
-      if (accumulatedDelta.current < SCROLL_THRESHOLD) return;
-
-      accumulatedDelta.current = 0;
-      wheelGestureConsumed.current = true;
-      void runFlip(1);
-    };
-
-    section.addEventListener("wheel", onWheel, { passive: false });
+    const mediaQuery = window.matchMedia("(max-width: 900px)");
+    const updateViewport = () => setIsMobile(mediaQuery.matches);
+    updateViewport();
+    mediaQuery.addEventListener("change", updateViewport);
     return () => {
-      section.removeEventListener("wheel", onWheel);
-      if (wheelIdleTimer.current) clearTimeout(wheelIdleTimer.current);
+      mediaQuery.removeEventListener("change", updateViewport);
     };
-  }, [runFlip]);
+  }, []);
 
-  const activeCard = aboutCards[cardIndex];
-  const isBusy = flipPhase !== "IDLE";
+  const useParallax = !isMobile && !prefersReducedMotion;
 
   return (
     <section
       ref={sectionRef}
-      className={`${styles.section} ${styles.about}`}
+      className={styles.aboutStory}
       id="about"
       aria-labelledby="about-title"
     >
-      <motion.div {...reveal} className={styles.aboutIntro}>
-        <div className={styles.sectionLabel}><span>01</span>About</div>
-        <h2 id="about-title">A little about me.</h2>
-        <p>I enjoy turning ideas into thoughtful products that work in the real world.</p>
-      </motion.div>
+      <div className={styles.aboutSticky}>
+        <motion.div className={styles.aboutNarrative} style={useParallax ? { y: headingY } : undefined}>
+          <div className={styles.sectionLabel}><span>01</span>About</div>
+          <h2 id="about-title">Building software, hardware,<br />and experiences through code.</h2>
+          <p>I&apos;m a Computer Science student who enjoys turning ideas into useful, thoughtfully made technology.</p>
+        </motion.div>
 
-      <motion.div {...reveal} className={styles.identityStage}>
-        <div
-          className={styles.identityCard}
-          aria-busy={isBusy}
-          onTouchStart={(event) => {
-            if (phaseRef.current !== "IDLE") return;
-            touchStartY.current = event.touches[0]?.clientY ?? null;
-          }}
-          onTouchCancel={() => {
-            touchStartY.current = null;
-          }}
-          onTouchEnd={(event) => {
-            if (phaseRef.current !== "IDLE" || touchStartY.current === null) return;
-            const endY = event.changedTouches[0]?.clientY ?? touchStartY.current;
-            const forwardDistance = touchStartY.current - endY;
-            touchStartY.current = null;
-            if (forwardDistance >= 44) void runFlip(1);
-          }}
-        >
-          <motion.article
-            ref={cardScope}
-            className={styles.identityFace}
-            initial={false}
-            style={{ rotateX: 0 }}
-            aria-live="polite"
-          >
-            <header>
-              <span>{activeCard.label}</span>
-              <span>{cardIndex + 1} / {aboutCards.length}</span>
-            </header>
-            <div className={styles.identityContent}>
-              {activeCard.lines.map((line) => <p key={line}>{line}</p>)}
-            </div>
-            <span className={styles.cardHint}>Scroll or swipe</span>
-          </motion.article>
+        <div className={styles.aboutBlocks}>
+          {aboutBlocks.map((block, index) => (
+            <motion.article
+              key={block.number}
+              className={styles.aboutBlock}
+              style={useParallax ? { y: blockTransforms[index] } : undefined}
+              initial={isMobile ? { opacity: 0, y: 22 } : { opacity: 0 }}
+              whileInView={isMobile ? { opacity: 1, y: 0 } : { opacity: 1 }}
+              viewport={{ once: false, amount: 0.35 }}
+              transition={{ duration: 0.75, delay: index * 0.05, ease: [0.22, 1, 0.36, 1] }}
+            >
+              <header><span>{block.number}</span><span>{block.label}</span></header>
+              <div>{block.lines.map((line) => <p key={line}>{line}</p>)}</div>
+            </motion.article>
+          ))}
         </div>
 
-        <div className={styles.cardNavigation}>
-          <button
-            type="button"
-            onClick={() => void runFlip(-1)}
-            disabled={isBusy || cardIndex === 0}
-            aria-label="Show previous identity card"
-          >
-            <CardArrow direction="previous" />
-          </button>
-          <div className={styles.cardProgress} aria-label={`Card ${progressIndex + 1} of ${aboutCards.length}`}>
-            {aboutCards.map((card, index) => (
-              <span key={card.label} className={index === progressIndex ? styles.activeProgress : undefined} />
-            ))}
-          </div>
-          <button
-            type="button"
-            onClick={() => void runFlip(1)}
-            disabled={isBusy || cardIndex === aboutCards.length - 1}
-            aria-label="Show next identity card"
-          >
-            <CardArrow direction="next" />
-          </button>
-        </div>
-      </motion.div>
+        <motion.div
+          className={styles.aboutDecoration}
+          style={useParallax ? { y: decorationY } : undefined}
+          aria-hidden="true"
+        ><span /><span /></motion.div>
+      </div>
     </section>
   );
 }
@@ -562,7 +397,7 @@ export default function Portfolio() {
         </motion.div>
       </section>
 
-      <IdentityCard />
+      <AboutSection />
 
       <TechnologyMarquee />
 
