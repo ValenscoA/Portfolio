@@ -67,6 +67,11 @@ const aboutCards = [
   },
 ];
 
+const SCROLL_THRESHOLD = 70;
+const ANIMATION_DURATION = 600;
+const WHEEL_IDLE_DURATION = 180;
+const MIN_WHEEL_DELTA = 1;
+
 const reveal = {
   initial: { opacity: 0, y: 18 },
   whileInView: { opacity: 1, y: 0 },
@@ -253,9 +258,12 @@ function IdentityCard() {
   const sectionRef = useRef<HTMLElement>(null);
   const cardIndexRef = useRef(0);
   const touchStartY = useRef<number | null>(null);
-  const wheelDelta = useRef(0);
-  const wheelHandled = useRef(false);
-  const wheelReleaseTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const accumulatedDelta = useRef(0);
+  const isAnimating = useRef(false);
+  const wheelGestureConsumed = useRef(false);
+  const wheelIsQuiet = useRef(true);
+  const wheelIdleTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const animationTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [cardIndex, setCardIndex] = useState(0);
   const [direction, setDirection] = useState(1);
 
@@ -273,13 +281,35 @@ function IdentityCard() {
     return true;
   }, []);
 
+  const requestCardChange = useCallback((step: number) => {
+    if (isAnimating.current) return false;
+
+    const changed = changeCard(step);
+    if (!changed) return false;
+
+    isAnimating.current = true;
+    if (animationTimer.current) clearTimeout(animationTimer.current);
+    animationTimer.current = setTimeout(() => {
+      isAnimating.current = false;
+      accumulatedDelta.current = 0;
+      if (wheelIsQuiet.current) wheelGestureConsumed.current = false;
+    }, ANIMATION_DURATION);
+
+    return true;
+  }, [changeCard]);
+
   useEffect(() => {
     const section = sectionRef.current;
     if (!section) return;
 
-    const releaseWheel = () => {
-      wheelHandled.current = false;
-      wheelDelta.current = 0;
+    const markWheelActivity = () => {
+      wheelIsQuiet.current = false;
+      if (wheelIdleTimer.current) clearTimeout(wheelIdleTimer.current);
+      wheelIdleTimer.current = setTimeout(() => {
+        wheelIsQuiet.current = true;
+        accumulatedDelta.current = 0;
+        if (!isAnimating.current) wheelGestureConsumed.current = false;
+      }, WHEEL_IDLE_DURATION);
     };
 
     const onWheel = (event: WheelEvent) => {
@@ -288,39 +318,51 @@ function IdentityCard() {
         && bounds.bottom > window.innerHeight * 0.25;
 
       if (!isActive) return;
+      if (Math.abs(event.deltaY) < MIN_WHEEL_DELTA) return;
 
-      if (wheelReleaseTimer.current) clearTimeout(wheelReleaseTimer.current);
-      wheelReleaseTimer.current = setTimeout(releaseWheel, 180);
+      markWheelActivity();
 
-      if (wheelHandled.current) {
+      if (isAnimating.current || wheelGestureConsumed.current) {
         event.preventDefault();
         event.stopPropagation();
         return;
       }
 
-      wheelDelta.current += event.deltaY;
-      const step = wheelDelta.current > 0 ? 1 : -1;
-      const canMove = step > 0
+      const immediateStep = event.deltaY > 0 ? 1 : -1;
+      const canMoveImmediately = immediateStep > 0
         ? cardIndexRef.current < aboutCards.length - 1
         : cardIndexRef.current > 0;
 
-      if (!canMove) return;
+      if (!canMoveImmediately) {
+        accumulatedDelta.current = 0;
+        return;
+      }
 
       event.preventDefault();
       event.stopPropagation();
 
-      if (Math.abs(wheelDelta.current) < 30) return;
+      accumulatedDelta.current += event.deltaY;
 
-      wheelHandled.current = changeCard(step);
-      wheelDelta.current = 0;
+      if (Math.abs(accumulatedDelta.current) < SCROLL_THRESHOLD) return;
+
+      const step = accumulatedDelta.current > 0 ? 1 : -1;
+      const canMove = step > 0
+        ? cardIndexRef.current < aboutCards.length - 1
+        : cardIndexRef.current > 0;
+
+      accumulatedDelta.current = 0;
+      if (!canMove) return;
+
+      wheelGestureConsumed.current = requestCardChange(step);
     };
 
     section.addEventListener("wheel", onWheel, { passive: false });
     return () => {
       section.removeEventListener("wheel", onWheel);
-      if (wheelReleaseTimer.current) clearTimeout(wheelReleaseTimer.current);
+      if (wheelIdleTimer.current) clearTimeout(wheelIdleTimer.current);
+      if (animationTimer.current) clearTimeout(animationTimer.current);
     };
-  }, [changeCard]);
+  }, [requestCardChange]);
 
   const activeCard = aboutCards[cardIndex];
 
@@ -348,7 +390,7 @@ function IdentityCard() {
             const endY = event.changedTouches[0]?.clientY ?? touchStartY.current;
             const distance = touchStartY.current - endY;
             touchStartY.current = null;
-            if (Math.abs(distance) >= 44) changeCard(distance > 0 ? 1 : -1);
+            if (Math.abs(distance) >= 44) requestCardChange(distance > 0 ? 1 : -1);
           }}
         >
           <AnimatePresence initial={false} custom={direction}>
@@ -360,7 +402,7 @@ function IdentityCard() {
               initial="enter"
               animate="visible"
               exit="exit"
-              transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
+              transition={{ duration: ANIMATION_DURATION / 1000, ease: [0.22, 1, 0.36, 1] }}
               aria-live="polite"
             >
               <header>
@@ -378,7 +420,7 @@ function IdentityCard() {
         <div className={styles.cardNavigation}>
           <button
             type="button"
-            onClick={() => changeCard(-1)}
+            onClick={() => requestCardChange(-1)}
             disabled={cardIndex === 0}
             aria-label="Show previous identity card"
           >
@@ -391,7 +433,7 @@ function IdentityCard() {
           </div>
           <button
             type="button"
-            onClick={() => changeCard(1)}
+            onClick={() => requestCardChange(1)}
             disabled={cardIndex === aboutCards.length - 1}
             aria-label="Show next identity card"
           >
