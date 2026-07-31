@@ -3,7 +3,14 @@
 import Link from "next/link";
 import { AnimatePresence, motion } from "motion/react";
 import Lenis from "lenis";
-import { type Dispatch, type SetStateAction, useEffect, useState } from "react";
+import {
+  type Dispatch,
+  type SetStateAction,
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 import BrandLogo from "./components/BrandLogo";
 import styles from "./page.module.css";
 
@@ -41,11 +48,36 @@ const projects = [
   },
 ];
 
+const aboutCards = [
+  {
+    label: "ABOUT",
+    lines: ["Computer Science student passionate about building useful software and hardware."],
+  },
+  {
+    label: "LOCATION",
+    lines: ["Based in Malaysia."],
+  },
+  {
+    label: "FOCUS",
+    lines: ["Software Engineering", "UI Design", "Embedded Systems"],
+  },
+  {
+    label: "CURRENTLY",
+    lines: ["Building projects.", "Learning new technologies.", "Preparing for internships."],
+  },
+];
+
 const reveal = {
   initial: { opacity: 0, y: 18 },
   whileInView: { opacity: 1, y: 0 },
   viewport: { once: false, margin: "-12%" },
   transition: { duration: 1.05, ease: [0.22, 1, 0.36, 1] as const },
+};
+
+const cardFlip = {
+  enter: (step: number) => ({ opacity: 0, rotateX: step > 0 ? 72 : -72 }),
+  visible: { opacity: 1, rotateX: 0 },
+  exit: (step: number) => ({ opacity: 0, rotateX: step > 0 ? -72 : 72 }),
 };
 
 function Arrow({ diagonal = false }: { diagonal?: boolean }) {
@@ -201,6 +233,176 @@ function ProjectVisual({ project }: { project: (typeof projects)[number] }) {
   );
 }
 
+function CardArrow({ direction }: { direction: "previous" | "next" }) {
+  return (
+    <svg
+      aria-hidden="true"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.6"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d={direction === "previous" ? "m15 18-6-6 6-6" : "m9 18 6-6-6-6"} />
+    </svg>
+  );
+}
+
+function IdentityCard() {
+  const sectionRef = useRef<HTMLElement>(null);
+  const cardIndexRef = useRef(0);
+  const touchStartY = useRef<number | null>(null);
+  const wheelDelta = useRef(0);
+  const wheelHandled = useRef(false);
+  const wheelReleaseTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [cardIndex, setCardIndex] = useState(0);
+  const [direction, setDirection] = useState(1);
+
+  const changeCard = useCallback((step: number) => {
+    const nextIndex = Math.min(
+      aboutCards.length - 1,
+      Math.max(0, cardIndexRef.current + step),
+    );
+
+    if (nextIndex === cardIndexRef.current) return false;
+
+    setDirection(step);
+    cardIndexRef.current = nextIndex;
+    setCardIndex(nextIndex);
+    return true;
+  }, []);
+
+  useEffect(() => {
+    const section = sectionRef.current;
+    if (!section) return;
+
+    const releaseWheel = () => {
+      wheelHandled.current = false;
+      wheelDelta.current = 0;
+    };
+
+    const onWheel = (event: WheelEvent) => {
+      const bounds = section.getBoundingClientRect();
+      const isActive = bounds.top < window.innerHeight * 0.75
+        && bounds.bottom > window.innerHeight * 0.25;
+
+      if (!isActive) return;
+
+      if (wheelReleaseTimer.current) clearTimeout(wheelReleaseTimer.current);
+      wheelReleaseTimer.current = setTimeout(releaseWheel, 180);
+
+      if (wheelHandled.current) {
+        event.preventDefault();
+        event.stopPropagation();
+        return;
+      }
+
+      wheelDelta.current += event.deltaY;
+      const step = wheelDelta.current > 0 ? 1 : -1;
+      const canMove = step > 0
+        ? cardIndexRef.current < aboutCards.length - 1
+        : cardIndexRef.current > 0;
+
+      if (!canMove) return;
+
+      event.preventDefault();
+      event.stopPropagation();
+
+      if (Math.abs(wheelDelta.current) < 30) return;
+
+      wheelHandled.current = changeCard(step);
+      wheelDelta.current = 0;
+    };
+
+    section.addEventListener("wheel", onWheel, { passive: false });
+    return () => {
+      section.removeEventListener("wheel", onWheel);
+      if (wheelReleaseTimer.current) clearTimeout(wheelReleaseTimer.current);
+    };
+  }, [changeCard]);
+
+  const activeCard = aboutCards[cardIndex];
+
+  return (
+    <section
+      ref={sectionRef}
+      className={`${styles.section} ${styles.about}`}
+      id="about"
+      aria-labelledby="about-title"
+    >
+      <motion.div {...reveal} className={styles.aboutIntro}>
+        <div className={styles.sectionLabel}><span>01</span>About</div>
+        <h2 id="about-title">A little about me.</h2>
+        <p>I enjoy turning ideas into thoughtful products that work in the real world.</p>
+      </motion.div>
+
+      <motion.div {...reveal} className={styles.identityStage}>
+        <div
+          className={styles.identityCard}
+          onTouchStart={(event) => {
+            touchStartY.current = event.touches[0]?.clientY ?? null;
+          }}
+          onTouchEnd={(event) => {
+            if (touchStartY.current === null) return;
+            const endY = event.changedTouches[0]?.clientY ?? touchStartY.current;
+            const distance = touchStartY.current - endY;
+            touchStartY.current = null;
+            if (Math.abs(distance) >= 44) changeCard(distance > 0 ? 1 : -1);
+          }}
+        >
+          <AnimatePresence initial={false} custom={direction}>
+            <motion.article
+              key={activeCard.label}
+              className={styles.identityFace}
+              custom={direction}
+              variants={cardFlip}
+              initial="enter"
+              animate="visible"
+              exit="exit"
+              transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
+              aria-live="polite"
+            >
+              <header>
+                <span>{activeCard.label}</span>
+                <span>{cardIndex + 1} / {aboutCards.length}</span>
+              </header>
+              <div className={styles.identityContent}>
+                {activeCard.lines.map((line) => <p key={line}>{line}</p>)}
+              </div>
+              <span className={styles.cardHint}>Scroll or swipe</span>
+            </motion.article>
+          </AnimatePresence>
+        </div>
+
+        <div className={styles.cardNavigation}>
+          <button
+            type="button"
+            onClick={() => changeCard(-1)}
+            disabled={cardIndex === 0}
+            aria-label="Show previous identity card"
+          >
+            <CardArrow direction="previous" />
+          </button>
+          <div className={styles.cardProgress} aria-label={`Card ${cardIndex + 1} of ${aboutCards.length}`}>
+            {aboutCards.map((card, index) => (
+              <span key={card.label} className={index === cardIndex ? styles.activeProgress : undefined} />
+            ))}
+          </div>
+          <button
+            type="button"
+            onClick={() => changeCard(1)}
+            disabled={cardIndex === aboutCards.length - 1}
+            aria-label="Show next identity card"
+          >
+            <CardArrow direction="next" />
+          </button>
+        </div>
+      </motion.div>
+    </section>
+  );
+}
+
 export default function Portfolio() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
@@ -244,17 +446,7 @@ export default function Portfolio() {
         </motion.div>
       </section>
 
-      <section className={`${styles.section} ${styles.about}`} id="about" aria-labelledby="about-title">
-        <motion.div {...reveal} className={styles.sectionLabel}><span>01</span>About</motion.div>
-        <motion.div {...reveal} className={styles.aboutCopy}>
-          <h2 id="about-title">I turn digital ideas into clear, useful experiences.</h2>
-          <p>Design and front-end, handled as one craft.</p>
-        </motion.div>
-        <motion.div {...reveal} className={styles.aboutMeta}>
-          <span>Independent designer &amp; developer</span>
-          <span>Indonesia · Available worldwide</span>
-        </motion.div>
-      </section>
+      <IdentityCard />
 
       <section className={`${styles.section} ${styles.projects}`} id="projects" aria-labelledby="projects-title">
         <motion.div {...reveal} className={styles.sectionHead}>
