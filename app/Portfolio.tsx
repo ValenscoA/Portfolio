@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { AnimatePresence, motion } from "motion/react";
+import { AnimatePresence, motion, useAnimate, useReducedMotion } from "motion/react";
 import Lenis from "lenis";
 import {
   type Dispatch,
@@ -11,6 +11,7 @@ import {
   useRef,
   useState,
 } from "react";
+import { flushSync } from "react-dom";
 import BrandLogo from "./components/BrandLogo";
 import styles from "./page.module.css";
 
@@ -67,22 +68,35 @@ const aboutCards = [
   },
 ];
 
+const technologies = [
+  "Python",
+  "Java",
+  "C++",
+  "JavaScript",
+  "TypeScript",
+  "HTML",
+  "CSS",
+  "React",
+  "Node.js",
+  "SQL",
+  "Git",
+  "Docker",
+  "Linux",
+  "Arduino",
+  "Raspberry Pi",
+];
+
 const SCROLL_THRESHOLD = 70;
 const ANIMATION_DURATION = 600;
 const WHEEL_IDLE_DURATION = 180;
 const MIN_WHEEL_DELTA = 1;
+const FLIP_HALF_DURATION = ANIMATION_DURATION / 2000;
 
 const reveal = {
   initial: { opacity: 0, y: 18 },
   whileInView: { opacity: 1, y: 0 },
   viewport: { once: false, margin: "-12%" },
   transition: { duration: 1.05, ease: [0.22, 1, 0.36, 1] as const },
-};
-
-const cardFlip = {
-  enter: (step: number) => ({ opacity: 0, rotateX: step > 0 ? 72 : -72 }),
-  visible: { opacity: 1, rotateX: 0 },
-  exit: (step: number) => ({ opacity: 0, rotateX: step > 0 ? -72 : 72 }),
 };
 
 function Arrow({ diagonal = false }: { diagonal?: boolean }) {
@@ -254,61 +268,90 @@ function CardArrow({ direction }: { direction: "previous" | "next" }) {
   );
 }
 
+type FlipPhase = "IDLE" | "FLIPPING" | "SETTLING";
+
 function IdentityCard() {
   const sectionRef = useRef<HTMLElement>(null);
   const cardIndexRef = useRef(0);
+  const phaseRef = useRef<FlipPhase>("IDLE");
   const touchStartY = useRef<number | null>(null);
   const accumulatedDelta = useRef(0);
-  const isAnimating = useRef(false);
   const wheelGestureConsumed = useRef(false);
-  const wheelIsQuiet = useRef(true);
   const wheelIdleTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const animationTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [cardScope, animateCard] = useAnimate();
+  const prefersReducedMotion = useReducedMotion();
   const [cardIndex, setCardIndex] = useState(0);
-  const [direction, setDirection] = useState(1);
+  const [progressIndex, setProgressIndex] = useState(0);
+  const [flipPhase, setFlipPhase] = useState<FlipPhase>("IDLE");
 
-  const changeCard = useCallback((step: number) => {
+  const updatePhase = useCallback((nextPhase: FlipPhase) => {
+    phaseRef.current = nextPhase;
+    setFlipPhase(nextPhase);
+  }, []);
+
+  const runFlip = useCallback(async (step: number) => {
+    if (phaseRef.current !== "IDLE") return false;
+
     const nextIndex = Math.min(
       aboutCards.length - 1,
       Math.max(0, cardIndexRef.current + step),
     );
-
     if (nextIndex === cardIndexRef.current) return false;
 
-    setDirection(step);
-    cardIndexRef.current = nextIndex;
-    setCardIndex(nextIndex);
-    return true;
-  }, []);
+    updatePhase("FLIPPING");
 
-  const requestCardChange = useCallback((step: number) => {
-    if (isAnimating.current) return false;
+    try {
+      if (prefersReducedMotion) {
+        await animateCard(cardScope.current, { opacity: 0 }, {
+          duration: 0.16,
+          ease: "easeOut",
+        });
+      } else {
+        await animateCard(cardScope.current, {
+          opacity: 0.84,
+          rotateX: step > 0 ? -90 : 90,
+        }, {
+          duration: FLIP_HALF_DURATION,
+          ease: [0.22, 1, 0.36, 1],
+        });
+      }
 
-    const changed = changeCard(step);
-    if (!changed) return false;
+      flushSync(() => {
+        cardIndexRef.current = nextIndex;
+        setCardIndex(nextIndex);
+      });
 
-    isAnimating.current = true;
-    if (animationTimer.current) clearTimeout(animationTimer.current);
-    animationTimer.current = setTimeout(() => {
-      isAnimating.current = false;
+      await animateCard(cardScope.current, prefersReducedMotion
+        ? { opacity: 0, rotateX: 0 }
+        : { opacity: 0.84, rotateX: step > 0 ? 90 : -90 }, {
+        duration: 0,
+      });
+
+      updatePhase("SETTLING");
+
+      await animateCard(cardScope.current, { opacity: 1, rotateX: 0 }, {
+        duration: prefersReducedMotion ? 0.16 : FLIP_HALF_DURATION,
+        ease: [0.22, 1, 0.36, 1],
+      });
+
+      setProgressIndex(nextIndex);
+      return true;
+    } finally {
+      await animateCard(cardScope.current, { opacity: 1, rotateX: 0 }, { duration: 0 });
       accumulatedDelta.current = 0;
-      if (wheelIsQuiet.current) wheelGestureConsumed.current = false;
-    }, ANIMATION_DURATION);
-
-    return true;
-  }, [changeCard]);
+      updatePhase("IDLE");
+    }
+  }, [animateCard, cardScope, prefersReducedMotion, updatePhase]);
 
   useEffect(() => {
     const section = sectionRef.current;
     if (!section) return;
 
     const markWheelActivity = () => {
-      wheelIsQuiet.current = false;
       if (wheelIdleTimer.current) clearTimeout(wheelIdleTimer.current);
       wheelIdleTimer.current = setTimeout(() => {
-        wheelIsQuiet.current = true;
         accumulatedDelta.current = 0;
-        if (!isAnimating.current) wheelGestureConsumed.current = false;
+        wheelGestureConsumed.current = false;
       }, WHEEL_IDLE_DURATION);
     };
 
@@ -318,22 +361,19 @@ function IdentityCard() {
         && bounds.bottom > window.innerHeight * 0.25;
 
       if (!isActive) return;
-      if (Math.abs(event.deltaY) < MIN_WHEEL_DELTA) return;
 
-      markWheelActivity();
-
-      if (isAnimating.current || wheelGestureConsumed.current) {
+      if (phaseRef.current !== "IDLE") {
         event.preventDefault();
         event.stopPropagation();
         return;
       }
 
-      const immediateStep = event.deltaY > 0 ? 1 : -1;
-      const canMoveImmediately = immediateStep > 0
-        ? cardIndexRef.current < aboutCards.length - 1
-        : cardIndexRef.current > 0;
+      if (event.deltaY <= 0) {
+        accumulatedDelta.current = 0;
+        return;
+      }
 
-      if (!canMoveImmediately) {
+      if (cardIndexRef.current >= aboutCards.length - 1) {
         accumulatedDelta.current = 0;
         return;
       }
@@ -341,30 +381,28 @@ function IdentityCard() {
       event.preventDefault();
       event.stopPropagation();
 
+      if (event.deltaY < MIN_WHEEL_DELTA) return;
+
+      markWheelActivity();
+      if (wheelGestureConsumed.current) return;
+
       accumulatedDelta.current += event.deltaY;
-
-      if (Math.abs(accumulatedDelta.current) < SCROLL_THRESHOLD) return;
-
-      const step = accumulatedDelta.current > 0 ? 1 : -1;
-      const canMove = step > 0
-        ? cardIndexRef.current < aboutCards.length - 1
-        : cardIndexRef.current > 0;
+      if (accumulatedDelta.current < SCROLL_THRESHOLD) return;
 
       accumulatedDelta.current = 0;
-      if (!canMove) return;
-
-      wheelGestureConsumed.current = requestCardChange(step);
+      wheelGestureConsumed.current = true;
+      void runFlip(1);
     };
 
     section.addEventListener("wheel", onWheel, { passive: false });
     return () => {
       section.removeEventListener("wheel", onWheel);
       if (wheelIdleTimer.current) clearTimeout(wheelIdleTimer.current);
-      if (animationTimer.current) clearTimeout(animationTimer.current);
     };
-  }, [requestCardChange]);
+  }, [runFlip]);
 
   const activeCard = aboutCards[cardIndex];
+  const isBusy = flipPhase !== "IDLE";
 
   return (
     <section
@@ -382,63 +420,101 @@ function IdentityCard() {
       <motion.div {...reveal} className={styles.identityStage}>
         <div
           className={styles.identityCard}
+          aria-busy={isBusy}
           onTouchStart={(event) => {
+            if (phaseRef.current !== "IDLE") return;
             touchStartY.current = event.touches[0]?.clientY ?? null;
           }}
-          onTouchEnd={(event) => {
-            if (touchStartY.current === null) return;
-            const endY = event.changedTouches[0]?.clientY ?? touchStartY.current;
-            const distance = touchStartY.current - endY;
+          onTouchCancel={() => {
             touchStartY.current = null;
-            if (Math.abs(distance) >= 44) requestCardChange(distance > 0 ? 1 : -1);
+          }}
+          onTouchEnd={(event) => {
+            if (phaseRef.current !== "IDLE" || touchStartY.current === null) return;
+            const endY = event.changedTouches[0]?.clientY ?? touchStartY.current;
+            const forwardDistance = touchStartY.current - endY;
+            touchStartY.current = null;
+            if (forwardDistance >= 44) void runFlip(1);
           }}
         >
-          <AnimatePresence initial={false} custom={direction}>
-            <motion.article
-              key={activeCard.label}
-              className={styles.identityFace}
-              custom={direction}
-              variants={cardFlip}
-              initial="enter"
-              animate="visible"
-              exit="exit"
-              transition={{ duration: ANIMATION_DURATION / 1000, ease: [0.22, 1, 0.36, 1] }}
-              aria-live="polite"
-            >
-              <header>
-                <span>{activeCard.label}</span>
-                <span>{cardIndex + 1} / {aboutCards.length}</span>
-              </header>
-              <div className={styles.identityContent}>
-                {activeCard.lines.map((line) => <p key={line}>{line}</p>)}
-              </div>
-              <span className={styles.cardHint}>Scroll or swipe</span>
-            </motion.article>
-          </AnimatePresence>
+          <motion.article
+            ref={cardScope}
+            className={styles.identityFace}
+            initial={false}
+            style={{ rotateX: 0 }}
+            aria-live="polite"
+          >
+            <header>
+              <span>{activeCard.label}</span>
+              <span>{cardIndex + 1} / {aboutCards.length}</span>
+            </header>
+            <div className={styles.identityContent}>
+              {activeCard.lines.map((line) => <p key={line}>{line}</p>)}
+            </div>
+            <span className={styles.cardHint}>Scroll or swipe</span>
+          </motion.article>
         </div>
 
         <div className={styles.cardNavigation}>
           <button
             type="button"
-            onClick={() => requestCardChange(-1)}
-            disabled={cardIndex === 0}
+            onClick={() => void runFlip(-1)}
+            disabled={isBusy || cardIndex === 0}
             aria-label="Show previous identity card"
           >
             <CardArrow direction="previous" />
           </button>
-          <div className={styles.cardProgress} aria-label={`Card ${cardIndex + 1} of ${aboutCards.length}`}>
+          <div className={styles.cardProgress} aria-label={`Card ${progressIndex + 1} of ${aboutCards.length}`}>
             {aboutCards.map((card, index) => (
-              <span key={card.label} className={index === cardIndex ? styles.activeProgress : undefined} />
+              <span key={card.label} className={index === progressIndex ? styles.activeProgress : undefined} />
             ))}
           </div>
           <button
             type="button"
-            onClick={() => requestCardChange(1)}
-            disabled={cardIndex === aboutCards.length - 1}
+            onClick={() => void runFlip(1)}
+            disabled={isBusy || cardIndex === aboutCards.length - 1}
             aria-label="Show next identity card"
           >
             <CardArrow direction="next" />
           </button>
+        </div>
+      </motion.div>
+    </section>
+  );
+}
+
+function TechnologyList({ hidden = false }: { hidden?: boolean }) {
+  return (
+    <ul className={styles.marqueeList} aria-hidden={hidden || undefined}>
+      {technologies.map((technology) => <li key={technology}>{technology}</li>)}
+    </ul>
+  );
+}
+
+function TechnologyMarquee() {
+  return (
+    <section
+      className={`${styles.section} ${styles.technologies}`}
+      id="technologies"
+      aria-labelledby="technologies-title"
+    >
+      <motion.div {...reveal} className={styles.technologyLabel}>
+        <h2 id="technologies-title"><span>02</span>Skills</h2>
+      </motion.div>
+
+      <motion.div
+        {...reveal}
+        className={styles.marquee}
+        tabIndex={0}
+        aria-label="Technologies marquee. Focus to pause the animation."
+      >
+        <ul className={styles.srOnly}>
+          {technologies.map((technology) => <li key={technology}>{technology}</li>)}
+        </ul>
+        <div className={styles.marqueeViewport} aria-hidden="true">
+          <div className={styles.marqueeTrack}>
+            <TechnologyList hidden />
+            <TechnologyList hidden />
+          </div>
         </div>
       </motion.div>
     </section>
@@ -489,6 +565,8 @@ export default function Portfolio() {
       </section>
 
       <IdentityCard />
+
+      <TechnologyMarquee />
 
       <section className={`${styles.section} ${styles.projects}`} id="projects" aria-labelledby="projects-title">
         <motion.div {...reveal} className={styles.sectionHead}>
