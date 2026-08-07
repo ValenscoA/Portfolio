@@ -204,6 +204,10 @@
   padding-left: 16px;
 }
 
+.menuLinks a.activeNavItem {
+  color: var(--accent);
+}
+
 .menuLinks a span {
   color: var(--muted);
   font-size: 12px;
@@ -637,7 +641,7 @@
   gap: clamp(150px, 14vw, 210px);
 }
 
-.projectCard a { display: block; }
+.projectCard > a { display: block; }
 
 .projectVisual {
   position: relative;
@@ -792,9 +796,10 @@
 .projectInfo span { color: var(--accent); font-size: 11px; }
 .projectInfo h3 { margin: 0; font-size: clamp(2.2rem, 3.9vw, 4.6rem); letter-spacing: -0.05em; line-height: 1; }
 .projectInfo p { margin: 0; color: var(--muted); font-size: 13px; }
-.projectYear { display: flex; gap: 32px; font-size: 13px; }
-.projectYear span:last-child { color: white; font-size: 18px; transition: transform 0.3s ease; }
-.projectCard:hover .projectYear span:last-child { transform: translateX(4px); }
+.projectActions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 10px 20px; font-size: 13px; }
+.projectActions .projectYear { color: white; }
+.projectActions a { color: var(--muted); transition: color 0.25s ease; }
+.projectActions a:hover { color: white; }
 
 .skills {
   min-height: 105svh;
@@ -824,6 +829,10 @@
 .contactMain h2 a { display: inline-flex; align-items: center; gap: 20px; }
 .contactMain h2 .externalIcon { width: 16px; height: 16px; flex-basis: 16px; color: var(--accent); transition: transform 0.3s ease; }
 .contactMain h2 a:hover .externalIcon { transform: translate(7px, -7px); }
+.contactMain h2 + p { max-width: 680px; margin: 32px 0 24px; line-height: 1.6; }
+.contactLinks { display: flex; flex-wrap: wrap; gap: 12px 28px; }
+.contactLinks a { color: var(--muted); transition: color 0.25s ease; }
+.contactLinks a:hover { color: white; }
 
 .footer {
   display: grid;
@@ -858,7 +867,7 @@
   .projectVisual { min-height: 72vw; }
   .projectInfo { grid-template-columns: 1fr auto; gap: 12px; }
   .projectInfo p { grid-column: 1; grid-row: 2; }
-  .projectYear { grid-column: 2; grid-row: 1 / 3; }
+  .projectActions { grid-column: 2; grid-row: 1 / 3; max-width: 180px; }
   .skillsLayout { margin-top: 70px; }
 }
 

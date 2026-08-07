@@ -9,6 +9,7 @@ import {
 import Lenis from "lenis";
 import {
   type Dispatch,
+  type MouseEvent as ReactMouseEvent,
   type SetStateAction,
   useCallback,
   useEffect,
@@ -18,12 +19,15 @@ import {
 import BrandLogo from "./components/BrandLogo";
 import styles from "./page.module.css";
 
+const resumeUrl = "https://valensco.me/resume.pdf";
+
 const navItems = [
-  { label: "About", href: "#about" },
-  { label: "Projects", href: "#projects" },
-  { label: "Skills", href: "#skills" },
-  { label: "Contact", href: "#contact" },
-];
+  { label: "About", href: "#about", external: false },
+  { label: "Projects", href: "#projects", external: false },
+  { label: "Skills", href: "#skills", external: false },
+  { label: "Contact", href: "#contact", external: false },
+  { label: "Resume", href: resumeUrl, external: true },
+] as const;
 
 const projects = [
   {
@@ -33,6 +37,9 @@ const projects = [
     type: "Product direction · Interface",
     year: "2026",
     className: styles.northstar,
+    liveUrl: "https://example.com/northstar-demo",
+    sourceUrl: "https://github.com/ValenscoA/northstar-placeholder",
+    caseStudyUrl: "/projects/northstar",
   },
   {
     slug: "solace",
@@ -41,6 +48,9 @@ const projects = [
     type: "Digital experience · Front-end",
     year: "2025",
     className: styles.solace,
+    liveUrl: "https://example.com/solace-demo",
+    sourceUrl: "https://github.com/ValenscoA/solace-placeholder",
+    caseStudyUrl: "/projects/solace",
   },
   {
     slug: "noma",
@@ -49,29 +59,32 @@ const projects = [
     type: "Identity · Editorial system",
     year: "2025",
     className: styles.noma,
+    liveUrl: "https://example.com/noma-archive-demo",
+    sourceUrl: "https://github.com/ValenscoA/noma-archive-placeholder",
+    caseStudyUrl: "/projects/noma",
   },
 ];
 
 const aboutBlocks = [
   {
     number: "01",
-    label: "ABOUT",
-    lines: ["Computer Science student passionate about building useful software."],
+    label: "NAME / TITLE",
+    lines: ["Valensco Aurelius", "Computer Science Student"],
   },
   {
     number: "02",
     label: "LOCATION",
-    lines: ["Based in Malaysia."],
+    lines: ["Malaysia"],
   },
   {
     number: "03",
     label: "FOCUS",
-    lines: ["Software Engineering", "UI Design", "Embedded Systems"],
+    lines: ["Software Engineering", "UI/UX Design", "Embedded Systems"],
   },
   {
     number: "04",
-    label: "CURRENTLY",
-    lines: ["Building projects.", "Learning new technologies.", "Preparing for internships."],
+    label: "CURRENT",
+    lines: ["Building projects.", "Learning new technologies.", "Looking for internship opportunities."],
   },
 ];
 
@@ -99,6 +112,20 @@ const reveal = {
   viewport: { once: false, margin: "-12%" },
   transition: { duration: 1.05, ease: [0.22, 1, 0.36, 1] as const },
 };
+
+function smoothScrollTo(event: ReactMouseEvent<HTMLAnchorElement>, href: string) {
+  event.preventDefault();
+  const target = document.querySelector<HTMLElement>(href);
+  if (!target) return;
+
+  const navbar = document.querySelector<HTMLElement>("[data-site-navbar]");
+  const offset = (navbar?.getBoundingClientRect().bottom ?? 0) + 20;
+  const top = Math.max(0, window.scrollY + target.getBoundingClientRect().top - offset);
+  const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  window.history.pushState(null, "", href);
+  window.scrollTo({ top, behavior: reduceMotion ? "auto" : "smooth" });
+}
 
 function Arrow({ diagonal = false }: { diagonal?: boolean }) {
   if (diagonal) {
@@ -141,9 +168,11 @@ function AmbientBackground() {
 function Nav({
   isMenuOpen,
   setIsMenuOpen,
+  onNavigate,
 }: {
   isMenuOpen: boolean;
   setIsMenuOpen: Dispatch<SetStateAction<boolean>>;
+  onNavigate: (event: ReactMouseEvent<HTMLAnchorElement>, href: string) => void;
 }) {
   return (
     <motion.header
@@ -152,8 +181,9 @@ function Nav({
       animate={{ opacity: 1, top: 20 }}
       transition={{ duration: 1, delay: 0.1, ease: [0.22, 1, 0.36, 1] }}
       aria-label="Primary navigation"
+      data-site-navbar
     >
-      <a className={styles.monogram} href="#top" aria-label="Back to top">
+      <a className={styles.monogram} href="#top" onClick={(event) => onNavigate(event, "#top")} aria-label="Go to hero section">
         <BrandLogo className={styles.brandLogo} priority />
       </a>
       <button
@@ -171,7 +201,17 @@ function Nav({
   );
 }
 
-function Menu({ isOpen, closeMenu }: { isOpen: boolean; closeMenu: () => void }) {
+function Menu({
+  isOpen,
+  closeMenu,
+  activeSection,
+  onNavigate,
+}: {
+  isOpen: boolean;
+  closeMenu: () => void;
+  activeSection: string;
+  onNavigate: (event: ReactMouseEvent<HTMLAnchorElement>, href: string) => void;
+}) {
   useEffect(() => {
     if (!isOpen) return;
     const onKey = (event: KeyboardEvent) => event.key === "Escape" && closeMenu();
@@ -213,7 +253,14 @@ function Menu({ isOpen, closeMenu }: { isOpen: boolean; closeMenu: () => void })
               <motion.a
                 key={item.label}
                 href={item.href}
-                onClick={closeMenu}
+                className={!item.external && activeSection === item.href.slice(1) ? styles.activeNavItem : undefined}
+                aria-current={!item.external && activeSection === item.href.slice(1) ? "location" : undefined}
+                target={item.external ? "_blank" : undefined}
+                rel={item.external ? "noopener noreferrer" : undefined}
+                onClick={item.external ? closeMenu : (event) => {
+                  closeMenu();
+                  onNavigate(event, item.href);
+                }}
                 variants={{ hidden: { opacity: 0, y: 22 }, show: { opacity: 1, y: 0 } }}
                 transition={{ duration: 0.75, ease: [0.22, 1, 0.36, 1] }}
               >
@@ -222,8 +269,8 @@ function Menu({ isOpen, closeMenu }: { isOpen: boolean; closeMenu: () => void })
             ))}
           </motion.div>
           <div className={styles.overlayFooter}>
-            <span>Based in Indonesia</span>
-            <a href="mailto:hello@valensco.dev">hello@valensco.dev</a>
+            <span>Based in Malaysia</span>
+            <a href="mailto:hello@valensco.me">hello@valensco.me</a>
           </div>
         </motion.div>
       )}
@@ -489,6 +536,11 @@ function TechnologyMarquee() {
 
 export default function Portfolio() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [activeSection, setActiveSection] = useState("top");
+
+  const handleNavigate = useCallback((event: ReactMouseEvent<HTMLAnchorElement>, href: string) => {
+    smoothScrollTo(event, href);
+  }, []);
 
   useEffect(() => {
     const lenis = new Lenis({ duration: 1.15, smoothWheel: true, wheelMultiplier: 0.9 });
@@ -504,11 +556,41 @@ export default function Portfolio() {
     };
   }, []);
 
+  useEffect(() => {
+    const sectionIds = ["top", "about", "projects", "skills", "contact"];
+    const updateActiveSection = () => {
+      const navbar = document.querySelector<HTMLElement>("[data-site-navbar]");
+      const marker = (navbar?.getBoundingClientRect().bottom ?? 0) + window.innerHeight * 0.22;
+      let current = "top";
+
+      for (const id of sectionIds) {
+        const section = document.getElementById(id);
+        if (section && section.getBoundingClientRect().top <= marker) current = id;
+      }
+
+      if (window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 2) current = "contact";
+      setActiveSection((previous) => previous === current ? previous : current);
+    };
+
+    updateActiveSection();
+    window.addEventListener("scroll", updateActiveSection, { passive: true });
+    window.addEventListener("resize", updateActiveSection);
+    return () => {
+      window.removeEventListener("scroll", updateActiveSection);
+      window.removeEventListener("resize", updateActiveSection);
+    };
+  }, []);
+
   return (
     <main id="top" className={styles.page}>
       <AmbientBackground />
-      <Nav isMenuOpen={isMenuOpen} setIsMenuOpen={setIsMenuOpen} />
-      <Menu isOpen={isMenuOpen} closeMenu={() => setIsMenuOpen(false)} />
+      <Nav isMenuOpen={isMenuOpen} setIsMenuOpen={setIsMenuOpen} onNavigate={handleNavigate} />
+      <Menu
+        isOpen={isMenuOpen}
+        closeMenu={() => setIsMenuOpen(false)}
+        activeSection={activeSection}
+        onNavigate={handleNavigate}
+      />
 
       <section className={styles.hero} aria-labelledby="hero-title">
         <motion.h1
@@ -525,8 +607,8 @@ export default function Portfolio() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.9, delay: 0.78, ease: [0.22, 1, 0.36, 1] }}
         >
-          <a href="#contact">Contact</a>
-          <a href="/resume" target="_blank" rel="noreferrer">Resume <Arrow diagonal /></a>
+          <a href="#contact" onClick={(event) => handleNavigate(event, "#contact")}>Contact</a>
+          <a href={resumeUrl} target="_blank" rel="noopener noreferrer">Resume <Arrow diagonal /></a>
         </motion.div>
       </section>
 
@@ -547,14 +629,19 @@ export default function Portfolio() {
               transition={{ ...reveal.transition, delay: index * 0.06 }}
               className={styles.projectCard}
             >
-              <Link href={`/projects/${project.slug}`} aria-label={`View ${project.title} project`}>
+              <Link href={project.caseStudyUrl} aria-label={`View ${project.title} case study`}>
                 <ProjectVisual project={project} />
-                <div className={styles.projectInfo}>
-                  <div><span>{project.number}</span><h3>{project.title}</h3></div>
-                  <p>{project.type}</p>
-                  <div className={styles.projectYear}>{project.year}<Arrow /></div>
-                </div>
               </Link>
+              <div className={styles.projectInfo}>
+                <div><span>{project.number}</span><h3><Link href={project.caseStudyUrl}>{project.title}</Link></h3></div>
+                <p>{project.type}</p>
+                <div className={styles.projectActions}>
+                  <span className={styles.projectYear}>{project.year}</span>
+                  <a href={project.liveUrl} target="_blank" rel="noopener noreferrer">Live Demo</a>
+                  <a href={project.sourceUrl} target="_blank" rel="noopener noreferrer">Source Code</a>
+                  <Link href={project.caseStudyUrl}>Case Study</Link>
+                </div>
+              </div>
             </motion.article>
           ))}
         </div>
@@ -575,17 +662,25 @@ export default function Portfolio() {
       <section className={`${styles.section} ${styles.contact}`} id="contact" aria-labelledby="contact-title">
         <motion.div {...reveal} className={styles.sectionLabel}><span>04</span>Contact</motion.div>
         <motion.div {...reveal} className={styles.contactMain}>
-          <p>Have something worth making?</p>
-          <h2 id="contact-title"><a href="mailto:hello@valensco.dev">Let&apos;s talk.<Arrow diagonal /></a></h2>
+          <h2 id="contact-title">Let&apos;s build something together.</h2>
+          <p>I&apos;m always open to internship opportunities, collaborations, and interesting projects. Feel free to reach out.</p>
+          <div className={styles.contactLinks} aria-label="Contact links">
+            <a href="mailto:hello@valensco.me">hello@valensco.me</a>
+            <a href="https://github.com/ValenscoA" target="_blank" rel="noopener noreferrer">GitHub</a>
+            <a href="https://linkedin.com/in/REPLACE_WITH_USERNAME" target="_blank" rel="noopener noreferrer">LinkedIn</a>
+            <a href="https://valensco.me" target="_blank" rel="noopener noreferrer">Portfolio</a>
+            <a href={resumeUrl} target="_blank" rel="noopener noreferrer">Resume</a>
+          </div>
         </motion.div>
         <motion.footer {...reveal} className={styles.footer}>
-          <span>© {new Date().getFullYear()} Valensco Aurelius</span>
+          <span>Valensco Aurelius<br />© 2026 Valensco Aurelius.<br />Built with Next.js, Motion and TypeScript.</span>
           <div>
-            <a href="https://github.com/" target="_blank" rel="noreferrer">GitHub</a>
-            <a href="https://linkedin.com/" target="_blank" rel="noreferrer">LinkedIn</a>
-            <a href="/resume" target="_blank" rel="noreferrer">Resume</a>
+            <a href="https://github.com/ValenscoA" target="_blank" rel="noopener noreferrer">GitHub</a>
+            <a href="https://linkedin.com/in/REPLACE_WITH_USERNAME" target="_blank" rel="noopener noreferrer">LinkedIn</a>
+            <a href="mailto:hello@valensco.me">Email</a>
+            <a href={resumeUrl} target="_blank" rel="noopener noreferrer">Resume</a>
           </div>
-          <a href="#top">Back to top ↑</a>
+          <a href="#top" onClick={(event) => handleNavigate(event, "#top")}>Back to top ↑</a>
         </motion.footer>
       </section>
     </main>

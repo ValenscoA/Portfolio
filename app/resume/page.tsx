@@ -18,8 +18,8 @@ export default function ResumePage() {
       <div className={styles.grid}>
         <div><span>Profile</span><p>I design and build focused digital products, with an eye for typography, interaction, and maintainable front-end systems.</p></div>
         <div><span>Core skills</span><p>React, TypeScript, Next.js, interaction design, prototyping, motion, design systems.</p></div>
-        <div><span>Contact</span><a href="mailto:hello@valensco.dev">hello@valensco.dev</a></div>
-        <div><span>Links</span><p>GitHub · LinkedIn</p></div>
+        <div><span>Contact</span><a href="mailto:hello@valensco.me">hello@valensco.me</a></div>
+        <div><span>Links</span><p><a href="https://github.com/ValenscoA" target="_blank" rel="noopener noreferrer">GitHub</a> · <a href="https://linkedin.com/in/REPLACE_WITH_USERNAME" target="_blank" rel="noopener noreferrer">LinkedIn</a></p></div>
       </div>
     </main>
   );
