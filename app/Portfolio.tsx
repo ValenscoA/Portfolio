@@ -5,16 +5,15 @@ import Image from "next/image";
 import {
   AnimatePresence,
   motion,
-  useReducedMotion,
 } from "motion/react";
 import Lenis from "lenis";
 import {
   type Dispatch,
+  type FormEvent,
   type MouseEvent as ReactMouseEvent,
   type SetStateAction,
   useCallback,
   useEffect,
-  useRef,
   useState,
 } from "react";
 import BrandLogo from "./components/BrandLogo";
@@ -43,28 +42,14 @@ const projects = [
   },
 ];
 
-const aboutBlocks = [
-  {
-    number: "01",
-    label: "NAME / TITLE",
-    lines: ["Valensco Aurelius", "Computer Science Student"],
-  },
-  {
-    number: "02",
-    label: "LOCATION",
-    lines: ["Malaysia"],
-  },
-  {
-    number: "03",
-    label: "FOCUS",
-    lines: ["Software Engineering", "UI/UX Design", "Embedded Systems"],
-  },
-  {
-    number: "04",
-    label: "CURRENT",
-    lines: ["Building projects.", "Learning new technologies.", "Looking for internship opportunities."],
-  },
-];
+const terminalCommands: Record<string, string[]> = {
+  whoami: ["Valensco Aurelius", "Computer Science student · Software engineer"],
+  location: ["Malaysia · UTC+8"],
+  focus: ["Software engineering", "Interface design", "Embedded systems"],
+  now: ["Building production-minded projects.", "Learning new technologies.", "Open to internship opportunities."],
+  contact: ["hello@valensco.me", "github.com/ValenscoA"],
+  help: ["Available commands: whoami, location, focus, now, contact, clear"],
+};
 
 const technologies = [
   "Python",
@@ -272,198 +257,79 @@ function ProjectVisual({ project }: { project: (typeof projects)[number] }) {
 }
 
 function AboutSection() {
-  const sectionRef = useRef<HTMLElement>(null);
-  const slideIndexRef = useRef(0);
-  const phaseRef = useRef<"IDLE" | "TRANSITIONING" | "SETTLED">("IDLE");
-  const accumulatedDelta = useRef(0);
-  const wheelGestureConsumed = useRef(false);
-  const touchGestureConsumed = useRef(false);
-  const wheelIdleTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const animationTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const cooldownTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const touchLastY = useRef<number | null>(null);
-  const prefersReducedMotion = useReducedMotion();
-  const [slideIndex, setSlideIndex] = useState(0);
-  const [phase, setPhase] = useState<"IDLE" | "TRANSITIONING" | "SETTLED">("IDLE");
+  const [command, setCommand] = useState("");
+  const [history, setHistory] = useState([
+    { command: "whoami", output: terminalCommands.whoami },
+    { command: "help", output: terminalCommands.help },
+  ]);
 
-  const updatePhase = useCallback((nextPhase: "IDLE" | "TRANSITIONING" | "SETTLED") => {
-    phaseRef.current = nextPhase;
-    setPhase(nextPhase);
-  }, []);
-
-  const advanceSlide = useCallback(() => {
-    if (phaseRef.current !== "IDLE" || slideIndexRef.current >= aboutBlocks.length - 1) return false;
-    const nextIndex = slideIndexRef.current + 1;
-
-    updatePhase("TRANSITIONING");
-    slideIndexRef.current = nextIndex;
-    setSlideIndex(nextIndex);
-
-    const section = sectionRef.current;
-    if (section) {
-      const sectionTop = window.scrollY + section.getBoundingClientRect().top;
-      window.scrollTo({ top: sectionTop + nextIndex * window.innerHeight, behavior: "auto" });
+  function executeCommand(rawCommand: string) {
+    const value = rawCommand.trim().toLowerCase();
+    if (!value) return;
+    if (value === "clear") {
+      setHistory([]);
+    } else {
+      setHistory((current) => [
+        ...current,
+        {
+          command: value,
+          output: terminalCommands[value] ?? [`Command not found: ${value}`, "Type 'help' to see available commands."],
+        },
+      ]);
     }
+    setCommand("");
+  }
 
-    if (animationTimer.current) clearTimeout(animationTimer.current);
-    animationTimer.current = setTimeout(() => {
-      updatePhase("SETTLED");
-      if (cooldownTimer.current) clearTimeout(cooldownTimer.current);
-      cooldownTimer.current = setTimeout(() => {
-        accumulatedDelta.current = 0;
-        updatePhase("IDLE");
-      }, prefersReducedMotion ? 80 : 200);
-    }, prefersReducedMotion ? 140 : 620);
-    return true;
-  }, [prefersReducedMotion, updatePhase]);
-
-  useEffect(() => {
-    const section = sectionRef.current;
-    if (!section) return;
-
-    const isPinned = () => {
-      const bounds = section.getBoundingClientRect();
-      return bounds.top <= 1 && bounds.bottom >= window.innerHeight - 1;
-    };
-
-    const handleWheel = (event: WheelEvent) => {
-      if (!isPinned()) return;
-
-      if (event.deltaY > 0) {
-        if (wheelIdleTimer.current) clearTimeout(wheelIdleTimer.current);
-        wheelIdleTimer.current = setTimeout(() => {
-          wheelGestureConsumed.current = false;
-          accumulatedDelta.current = 0;
-        }, 220);
-      }
-
-      if (phaseRef.current !== "IDLE") {
-        event.preventDefault();
-        event.stopPropagation();
-        return;
-      }
-
-      if (event.deltaY <= 0) {
-        accumulatedDelta.current = 0;
-        return;
-      }
-
-      if (wheelGestureConsumed.current) {
-        event.preventDefault();
-        event.stopPropagation();
-        return;
-      }
-
-      if (slideIndexRef.current >= aboutBlocks.length - 1) return;
-
-      event.preventDefault();
-      event.stopPropagation();
-
-      if (event.deltaY < 1.5) return;
-      accumulatedDelta.current += event.deltaY;
-      if (accumulatedDelta.current < 80) return;
-
-      wheelGestureConsumed.current = true;
-      accumulatedDelta.current = 0;
-      advanceSlide();
-    };
-
-    const handleTouchStart = (event: TouchEvent) => {
-      touchLastY.current = event.touches[0]?.clientY ?? null;
-      touchGestureConsumed.current = false;
-      accumulatedDelta.current = 0;
-    };
-
-    const handleTouchMove = (event: TouchEvent) => {
-      if (!isPinned() || touchLastY.current === null) return;
-      const currentY = event.touches[0]?.clientY ?? touchLastY.current;
-      const delta = touchLastY.current - currentY;
-      touchLastY.current = currentY;
-
-      if (phaseRef.current !== "IDLE" || touchGestureConsumed.current) {
-        event.preventDefault();
-        return;
-      }
-
-      if (delta <= 0) {
-        accumulatedDelta.current = 0;
-        return;
-      }
-
-      if (slideIndexRef.current >= aboutBlocks.length - 1) return;
-
-      event.preventDefault();
-      if (delta < 1.5) return;
-      accumulatedDelta.current += delta;
-      if (accumulatedDelta.current < 80) return;
-
-      touchGestureConsumed.current = true;
-      accumulatedDelta.current = 0;
-      advanceSlide();
-    };
-
-    const handleTouchEnd = () => {
-      touchLastY.current = null;
-      accumulatedDelta.current = 0;
-    };
-
-    section.addEventListener("wheel", handleWheel, { passive: false });
-    section.addEventListener("touchstart", handleTouchStart, { passive: true });
-    section.addEventListener("touchmove", handleTouchMove, { passive: false });
-    section.addEventListener("touchend", handleTouchEnd, { passive: true });
-    section.addEventListener("touchcancel", handleTouchEnd, { passive: true });
-    return () => {
-      section.removeEventListener("wheel", handleWheel);
-      section.removeEventListener("touchstart", handleTouchStart);
-      section.removeEventListener("touchmove", handleTouchMove);
-      section.removeEventListener("touchend", handleTouchEnd);
-      section.removeEventListener("touchcancel", handleTouchEnd);
-      if (wheelIdleTimer.current) clearTimeout(wheelIdleTimer.current);
-      if (animationTimer.current) clearTimeout(animationTimer.current);
-      if (cooldownTimer.current) clearTimeout(cooldownTimer.current);
-    };
-  }, [advanceSlide]);
-
-  const activeSlide = aboutBlocks[slideIndex];
+  function runCommand(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    executeCommand(command);
+  }
 
   return (
     <section
-      ref={sectionRef}
-      className={`${styles.section} ${styles.aboutPortraitSection}`}
+      className={`${styles.section} ${styles.aboutTerminalSection}`}
       id="about"
       aria-labelledby="about-title"
     >
-      <div className={styles.aboutPinned}>
-        <motion.div {...reveal} className={styles.aboutPortraitIntro}>
-          <div className={styles.sectionLabel}><span>01</span>About</div>
-          <h2 id="about-title">A little about me.</h2>
-          <p>I enjoy turning ideas into thoughtful products that work in the real world.</p>
-        </motion.div>
+      <motion.div {...reveal} className={styles.aboutTerminalIntro}>
+        <div className={styles.sectionLabel}><span>01</span>About</div>
+        <h2 id="about-title">Get to know me.</h2>
+        <p>Skip the polished bio. Ask the terminal.</p>
+      </motion.div>
 
-        <motion.div {...reveal} className={styles.portraitCardShell}>
-          <div className={styles.portraitCard} aria-busy={phase !== "IDLE"}>
-            <div className={styles.portraitMedia} role="img" aria-label="Portrait placeholder">
-              <div className={styles.portraitPlaceholder}><span>Portrait</span></div>
+      <motion.div {...reveal} className={styles.terminalWindow}>
+        <div className={styles.terminalBar}>
+          <div aria-hidden="true"><i /><i /><i /></div>
+          <span>valensco@portfolio:~</span>
+          <span>bash</span>
+        </div>
+        <div className={styles.terminalBody} aria-live="polite">
+          <p className={styles.terminalBoot}>Valensco OS 1.0.0 — portfolio shell</p>
+          {history.map((entry, index) => (
+            <div className={styles.terminalEntry} key={`${entry.command}-${index}`}>
+              <p><span>visitor@portfolio</span>:<b>~</b>$ {entry.command}</p>
+              {entry.output.map((line) => <p key={line}>{line}</p>)}
             </div>
-
-            <div className={styles.aboutInfoViewport} aria-live="polite">
-              <AnimatePresence initial={false} mode="sync">
-                <motion.article
-                  key={activeSlide.number}
-                  className={styles.aboutInfoSlide}
-                  initial={{ opacity: prefersReducedMotion ? 0 : 0.72, x: prefersReducedMotion ? 0 : "100%" }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: prefersReducedMotion ? 0 : 0.72, x: prefersReducedMotion ? 0 : "-100%" }}
-                  transition={{ duration: prefersReducedMotion ? 0.12 : 0.62, ease: [0.22, 1, 0.36, 1] }}
-                >
-                  <header><span>{activeSlide.number}</span><span>{activeSlide.label}</span></header>
-                  <div>{activeSlide.lines.map((line) => <p key={line}>{line}</p>)}</div>
-                </motion.article>
-              </AnimatePresence>
-            </div>
+          ))}
+          <form className={styles.terminalPrompt} onSubmit={runCommand}>
+            <label htmlFor="about-command"><span>visitor@portfolio</span>:<b>~</b>$</label>
+            <input
+              id="about-command"
+              value={command}
+              onChange={(event) => setCommand(event.target.value)}
+              autoComplete="off"
+              spellCheck={false}
+              aria-label="Enter an About command"
+            />
+            <span className={styles.terminalCursor} aria-hidden="true" />
+          </form>
+          <div className={styles.terminalShortcuts} aria-label="Quick commands">
+            {Object.keys(terminalCommands).filter((item) => item !== "help").map((item) => (
+              <button key={item} type="button" onClick={() => executeCommand(item)}>{item}</button>
+            ))}
           </div>
-        </motion.div>
-      </div>
+        </div>
+      </motion.div>
     </section>
   );
 }

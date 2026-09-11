@@ -349,175 +349,123 @@
   color: var(--accent);
 }
 
-.aboutPortraitSection {
-  position: relative;
-  height: 400svh;
-  min-height: 400svh;
-  padding: 0;
+.aboutTerminalSection {
+  display: grid;
+  grid-template-columns: minmax(250px, 0.7fr) minmax(0, 1.3fr);
+  align-items: center;
+  gap: clamp(60px, 9vw, 150px);
   border-top: 1px solid var(--line);
 }
 
-.aboutPinned {
-  position: sticky;
-  top: 0;
-  width: 100%;
-  height: 100svh;
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  align-items: center;
-  gap: clamp(72px, 9vw, 160px);
-  padding: clamp(90px, 9vw, 130px) 0 clamp(48px, 6vw, 86px);
-  box-sizing: border-box;
-}
-
-.aboutPortraitIntro {
+.aboutTerminalIntro {
   max-width: 720px;
 }
 
-.aboutPortraitIntro h2 {
+.aboutTerminalIntro h2 {
   max-width: 650px;
   margin: 54px 0 0;
-  font-size: clamp(3.6rem, 6vw, 6.7rem);
+  font-size: clamp(3.6rem, 6.4vw, 7rem);
   font-weight: 700;
   line-height: 0.94;
   letter-spacing: -0.058em;
 }
 
-.aboutPortraitIntro p {
+.aboutTerminalIntro p {
   max-width: 470px;
   margin: 34px 0 0;
   color: var(--muted);
-  font-size: clamp(0.95rem, 1.15vw, 1.08rem);
+  font-size: clamp(1rem, 1.2vw, 1.15rem);
   line-height: 1.55;
 }
 
-.portraitCardShell {
-  position: relative;
-  width: clamp(390px, 32vw, 470px);
-}
-
-.portraitCardShell::before {
-  content: "";
-  position: absolute;
-  inset: 8% -9% -7%;
-  z-index: -1;
-  border-radius: 50%;
-  background: radial-gradient(circle, rgba(78, 167, 255, 0.13), transparent 67%);
-  filter: blur(24px);
-  pointer-events: none;
-}
-
-.portraitCard {
+.terminalWindow {
   position: relative;
   width: 100%;
-  aspect-ratio: 1;
   overflow: hidden;
-  border: 1px solid rgba(255, 255, 255, 0.13);
-  border-radius: 22px;
-  background: rgba(7, 10, 14, 0.92);
-  box-shadow: 0 30px 90px rgba(0, 0, 0, 0.3), inset 0 1px rgba(255, 255, 255, 0.04);
-  touch-action: pan-y;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 14px;
+  background: rgba(4, 7, 10, 0.92);
+  box-shadow: 0 40px 110px rgba(0, 0, 0, 0.42), 0 0 80px rgba(78, 167, 255, 0.06);
+  font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
 }
 
-.portraitCard::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  z-index: 4;
-  opacity: 0.055;
-  pointer-events: none;
-  background-image:
-    radial-gradient(circle at 20% 30%, #fff 0 0.4px, transparent 0.7px),
-    radial-gradient(circle at 70% 65%, #fff 0 0.35px, transparent 0.65px);
-  background-size: 6px 6px, 9px 9px;
-  mix-blend-mode: soft-light;
-}
-
-.portraitMedia {
-  position: relative;
-  height: 66%;
-  overflow: hidden;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.11);
-}
-
-.portraitMedia img {
-  width: 100%;
-  height: 100%;
-  display: block;
-  object-fit: cover;
-}
-
-.portraitPlaceholder {
-  position: absolute;
-  inset: 0;
-  display: grid;
-  place-items: end start;
-  padding: 24px;
-  background:
-    radial-gradient(circle at 50% 36%, rgba(126, 185, 242, 0.2) 0 17%, transparent 17.5%),
-    radial-gradient(ellipse at 50% 105%, rgba(79, 124, 168, 0.28) 0 39%, transparent 39.5%),
-    linear-gradient(145deg, #101925, #080d14 58%, #05070a);
-}
-
-.portraitPlaceholder::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background: radial-gradient(circle at 70% 18%, rgba(78, 167, 255, 0.15), transparent 38%);
-}
-
-.portraitPlaceholder span {
-  position: relative;
-  z-index: 1;
-  color: rgba(255, 255, 255, 0.42);
-  font-size: 9px;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-}
-
-.aboutInfoViewport {
-  position: relative;
-  height: 34%;
-  overflow: hidden;
-}
-
-.aboutInfoSlide {
-  position: absolute;
-  inset: 0;
+.terminalBar {
   display: flex;
-  flex-direction: column;
-  padding: clamp(20px, 2vw, 28px);
+  align-items: center;
+  justify-content: space-between;
+  height: 46px;
+  padding: 0 17px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  color: #707988;
+  font-size: 12px;
 }
 
-.aboutInfoSlide header {
-  display: grid;
-  grid-template-columns: 36px 1fr;
-  color: var(--muted);
-  font-size: 9px;
-  line-height: 1;
-  letter-spacing: 0.14em;
+.terminalBar > div { display: flex; gap: 7px; }
+.terminalBar i { width: 9px; height: 9px; border-radius: 50%; background: #303744; }
+.terminalBar i:first-child { background: #ff6b64; }
+.terminalBar i:nth-child(2) { background: #f2c84b; }
+.terminalBar i:last-child { background: #50c878; }
+
+.terminalBody {
+  min-height: 470px;
+  padding: clamp(24px, 3vw, 38px);
+  color: #d7dce4;
+  font-size: clamp(0.88rem, 1.05vw, 1rem);
+  line-height: 1.65;
 }
 
-.aboutInfoSlide header span:first-child {
-  color: var(--accent);
+.terminalBody p { margin: 0; }
+.terminalBoot { margin-bottom: 24px !important; color: #687281; }
+.terminalEntry { margin-bottom: 20px; }
+.terminalEntry > p:first-child { color: #f5f7f9; }
+.terminalEntry > p:not(:first-child) { padding-left: 18px; color: #98a3b3; }
+.terminalEntry span,
+.terminalPrompt span { color: var(--accent); }
+.terminalEntry b,
+.terminalPrompt b { color: #4ea7ff; font-weight: 500; }
+
+.terminalPrompt {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #f5f7f9;
 }
 
-.aboutInfoSlide > div {
-  margin: auto 0;
+.terminalPrompt label { flex: 0 0 auto; }
+.terminalPrompt input {
+  min-width: 0;
+  flex: 1;
+  padding: 0;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: white;
+  font: inherit;
+  caret-color: var(--accent);
 }
 
-.aboutInfoSlide p {
-  max-width: 360px;
-  margin: 0;
-  font-size: clamp(1rem, 1.4vw, 1.25rem);
-  font-weight: 500;
-  line-height: 1.16;
-  letter-spacing: -0.025em;
+.terminalCursor {
+  width: 8px;
+  height: 1.1em;
+  background: var(--accent);
+  animation: terminalBlink 1s steps(1) infinite;
 }
 
-.aboutInfoSlide p + p {
-  margin-top: 4px;
+.terminalShortcuts { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 30px; }
+.terminalShortcuts button {
+  padding: 7px 10px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 5px;
+  background: rgba(255, 255, 255, 0.025);
+  color: #7f8998;
+  font: inherit;
+  font-size: 12px;
+  cursor: pointer;
+  transition: border-color 0.2s ease, color 0.2s ease;
 }
+.terminalShortcuts button:hover { border-color: var(--accent); color: var(--accent); }
+
+@keyframes terminalBlink { 50% { opacity: 0; } }
 
 .technologies {
   width: 100%;
@@ -757,16 +705,11 @@
 @media (max-width: 900px) {
   .hero h1 { white-space: normal; }
   .skills { grid-template-columns: 1fr; }
-  .aboutPinned {
+  .aboutTerminalSection {
     grid-template-columns: 1fr;
-    align-content: center;
-    gap: 42px;
-    padding-block: 92px 34px;
+    gap: 64px;
   }
-  .portraitCardShell {
-    width: min(100%, 390px);
-    justify-self: center;
-  }
+  .terminalWindow { max-width: 760px; }
   .skillsLayout { grid-column: 1; }
   .sectionHead { display: block; }
   .sectionHead h2 { margin-top: 55px; }
@@ -787,8 +730,6 @@
   .hero h1 span { display: block; }
   .heroLinks { gap: 28px; margin-top: 36px; }
   .section { padding: 140px 0; }
-  .aboutPortraitSection { padding: 0; }
-  .aboutPinned { padding-block: 82px 24px; gap: 30px; }
   .technologies { padding-block: 84px; }
   .technologyLabel { margin-bottom: 36px; }
   .marqueeList {
@@ -799,13 +740,12 @@
     gap: 28px;
     font-size: clamp(2.2rem, 12vw, 3.8rem);
   }
-  .aboutPortraitIntro h2, .skillsLayout h2 { font-size: clamp(3.2rem, 14vw, 4.8rem); }
-  .aboutPortraitIntro h2 { margin-top: 28px; }
-  .aboutPortraitIntro p { margin-top: 18px; font-size: 0.92rem; }
-  .portraitCardShell { width: min(100%, 340px); }
-  .portraitCard { border-radius: 18px; }
-  .aboutInfoSlide { padding: 20px; }
-  .aboutInfoSlide p { font-size: clamp(0.94rem, 4.3vw, 1.1rem); }
+  .aboutTerminalIntro h2, .skillsLayout h2 { font-size: clamp(3.2rem, 14vw, 4.8rem); }
+  .aboutTerminalIntro h2 { margin-top: 28px; }
+  .aboutTerminalIntro p { margin-top: 18px; font-size: 0.92rem; }
+  .terminalBody { min-height: 500px; padding: 22px 18px; font-size: 0.82rem; }
+  .terminalBar > span:nth-child(2) { display: none; }
+  .terminalEntry > p:not(:first-child) { padding-left: 0; }
   .projects { padding-top: 170px; }
   .projectList { gap: 110px; }
   .projectVisual { min-height: 124vw; }
