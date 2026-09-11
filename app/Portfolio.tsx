@@ -51,6 +51,8 @@ const terminalCommands: Record<string, string[]> = {
   help: ["Available commands: whoami, location, focus, now, contact, clear"],
 };
 
+const terminalHistoryLimit = 3;
+
 const technologies = [
   "Python",
   "Java",
@@ -269,13 +271,15 @@ function AboutSection() {
     if (value === "clear") {
       setHistory([]);
     } else {
-      setHistory((current) => [
-        ...current,
-        {
-          command: value,
-          output: terminalCommands[value] ?? [`Command not found: ${value}`, "Type 'help' to see available commands."],
-        },
-      ]);
+      setHistory((current) =>
+        [
+          ...current,
+          {
+            command: value,
+            output: terminalCommands[value] ?? [`Command not found: ${value}`, "Type 'help' to see available commands."],
+          },
+        ].slice(-terminalHistoryLimit),
+      );
     }
     setCommand("");
   }
