@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import {
   AnimatePresence,
   motion,
@@ -31,37 +32,14 @@ const navItems = [
 
 const projects = [
   {
-    slug: "northstar",
+    slug: "relay",
     number: "01",
-    title: "Northstar",
-    type: "Product direction · Interface",
+    title: "Relay",
+    type: "Desktop AI workspace · Full stack",
     year: "2026",
-    className: styles.northstar,
-    liveUrl: "https://example.com/northstar-demo",
-    sourceUrl: "https://github.com/ValenscoA/northstar-placeholder",
-    caseStudyUrl: "/projects/northstar",
-  },
-  {
-    slug: "solace",
-    number: "02",
-    title: "Solace",
-    type: "Digital experience · Front-end",
-    year: "2025",
-    className: styles.solace,
-    liveUrl: "https://example.com/solace-demo",
-    sourceUrl: "https://github.com/ValenscoA/solace-placeholder",
-    caseStudyUrl: "/projects/solace",
-  },
-  {
-    slug: "noma",
-    number: "03",
-    title: "Noma Archive",
-    type: "Identity · Editorial system",
-    year: "2025",
-    className: styles.noma,
-    liveUrl: "https://example.com/noma-archive-demo",
-    sourceUrl: "https://github.com/ValenscoA/noma-archive-placeholder",
-    caseStudyUrl: "/projects/noma",
+    className: styles.relay,
+    sourceUrl: "https://github.com/ValenscoA/relay-ai",
+    caseStudyUrl: "/projects/relay",
   },
 ];
 
@@ -281,21 +259,14 @@ function Menu({
 function ProjectVisual({ project }: { project: (typeof projects)[number] }) {
   return (
     <div className={`${styles.projectVisual} ${project.className}`} aria-hidden="true">
-      {project.slug === "northstar" && (
-        <div className={styles.uiWindow}>
-          <div className={styles.uiTop}><span>NS / 04</span><span>PORTFOLIO</span></div>
-          <div className={styles.chart}><i /><i /><i /><i /><i /><i /><i /></div>
-          <div className={styles.dataLine}><b>$84,290</b><span>+18.4%</span></div>
-        </div>
-      )}
-      {project.slug === "solace" && (
-        <div className={styles.solaceType}><span>Slow days,</span><span>well spent.</span><i>42° 59&apos; N</i></div>
-      )}
-      {project.slug === "noma" && (
-        <div className={styles.archiveGrid}>
-          <span>NOMA®</span><b>28</b><i>ARCHIVE / 2025</i><em>Objects, images, notes</em>
-        </div>
-      )}
+      <Image
+        className={styles.relayScreenshot}
+        src="/images/projects/relay-chat.png"
+        alt=""
+        width={2559}
+        height={1503}
+        sizes="(max-width: 900px) 92vw, 82vw"
+      />
     </div>
   );
 }
@@ -637,7 +608,6 @@ export default function Portfolio() {
                 <p>{project.type}</p>
                 <div className={styles.projectActions}>
                   <span className={styles.projectYear}>{project.year}</span>
-                  <a href={project.liveUrl} target="_blank" rel="noopener noreferrer">Live Demo</a>
                   <a href={project.sourceUrl} target="_blank" rel="noopener noreferrer">Source Code</a>
                   <Link href={project.caseStudyUrl}>Case Study</Link>
                 </div>

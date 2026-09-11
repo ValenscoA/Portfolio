@@ -663,121 +663,27 @@
   box-shadow: 0 35px 100px rgba(0, 0, 0, 0.35);
 }
 
-.northstar {
+.relay {
   display: grid;
   place-items: center;
   background:
-    radial-gradient(circle at 50% 45%, rgba(100, 186, 255, 0.25), transparent 40%),
-    linear-gradient(145deg, #0c1d30, #08101c 58%, #05080d);
+    radial-gradient(circle at 50% 40%, rgba(196, 246, 97, 0.26), transparent 45%),
+    linear-gradient(145deg, #18220d, #090c07 60%, #050605);
 }
 
-.uiWindow {
+.relayScreenshot {
   position: relative;
   z-index: 2;
-  width: 72%;
-  aspect-ratio: 16 / 9;
-  padding: 4.5%;
+  width: 86%;
+  height: auto;
   border: 1px solid rgba(255, 255, 255, 0.18);
   border-radius: 12px;
-  background: rgba(5, 12, 21, 0.78);
-  box-shadow: 0 40px 100px rgba(0, 0, 0, 0.55), inset 0 1px rgba(255, 255, 255, 0.08);
-  transform: perspective(1200px) rotateX(4deg);
+  box-shadow: 0 45px 120px rgba(0, 0, 0, 0.68), 0 0 0 1px rgba(196, 246, 97, 0.08);
+  transform: perspective(1400px) rotateX(3deg) rotateY(-2deg);
   transition: transform 0.7s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
-.projectCard:hover .uiWindow { transform: perspective(1200px) rotateX(0) scale(1.015); }
-
-.uiTop,
-.dataLine {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  font-size: clamp(7px, 0.7vw, 11px);
-  letter-spacing: 0.13em;
-  color: #7f9fbd;
-}
-
-.chart {
-  height: 58%;
-  display: flex;
-  gap: 5%;
-  align-items: end;
-  margin: 8% 0 5%;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-.chart i { flex: 1; background: linear-gradient(#65b5ff, #0d5699); border-radius: 2px 2px 0 0; }
-.chart i:nth-child(1) { height: 35%; }.chart i:nth-child(2) { height: 51%; }.chart i:nth-child(3) { height: 46%; }
-.chart i:nth-child(4) { height: 72%; }.chart i:nth-child(5) { height: 64%; }.chart i:nth-child(6) { height: 84%; }.chart i:nth-child(7) { height: 96%; }
-
-.dataLine b { color: white; font-size: clamp(18px, 3vw, 48px); letter-spacing: -0.05em; }
-.dataLine span { color: #84c5ff; }
-
-.solace {
-  display: grid;
-  place-items: center;
-  background:
-    linear-gradient(180deg, rgba(5, 19, 33, 0.1), rgba(4, 10, 16, 0.68)),
-    radial-gradient(ellipse at 70% 38%, #63a7d2 0%, #2b5d7d 23%, transparent 52%),
-    linear-gradient(145deg, #8fb7cc, #315a70 48%, #102332);
-}
-
-.solace::before {
-  content: "";
-  position: absolute;
-  inset: 53% -10% -20%;
-  background:
-    linear-gradient(155deg, transparent 0 18%, #0b1c25 18.2% 26%, transparent 26.2%),
-    linear-gradient(25deg, #091820 0 24%, transparent 24.2%),
-    #102b39;
-  filter: blur(1px);
-}
-
-.solaceType {
-  position: relative;
-  z-index: 2;
-  width: 80%;
-  display: flex;
-  flex-direction: column;
-  font-size: clamp(3.5rem, 8.5vw, 9.5rem);
-  font-weight: 700;
-  line-height: 0.82;
-  letter-spacing: -0.08em;
-}
-
-.solaceType span:last-of-type { margin-left: auto; }
-.solaceType i { margin: 48px auto 0 9%; color: rgba(255, 255, 255, 0.72); font-size: 11px; font-style: normal; letter-spacing: 0.2em; }
-
-.noma {
-  display: grid;
-  place-items: center;
-  background: #d9d7d0;
-  color: #10100f;
-}
-
-.archiveGrid {
-  position: relative;
-  z-index: 2;
-  width: 74%;
-  aspect-ratio: 1.45;
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  grid-template-rows: auto 1fr auto;
-  padding: 4%;
-  border: 1px solid rgba(12, 12, 12, 0.25);
-  background:
-    linear-gradient(90deg, transparent 49.9%, rgba(12, 12, 12, 0.14) 50%, transparent 50.1%),
-    linear-gradient(rgba(250, 249, 244, 0.86), rgba(214, 211, 202, 0.75));
-  box-shadow: 22px 24px 0 #bcb9b0, 50px 50px 90px rgba(31, 29, 24, 0.2);
-  transform: rotate(-2deg);
-  transition: transform 0.65s cubic-bezier(0.22, 1, 0.36, 1);
-}
-
-.projectCard:hover .archiveGrid { transform: rotate(0deg) scale(1.025); }
-.archiveGrid span { font-size: clamp(18px, 2vw, 30px); font-weight: 800; }
-.archiveGrid b { justify-self: end; font-size: clamp(38px, 8vw, 110px); line-height: 0.75; letter-spacing: -0.08em; }
-.archiveGrid i { align-self: end; font-style: normal; font-size: 10px; letter-spacing: 0.16em; }
-.archiveGrid em { align-self: end; justify-self: end; font-style: normal; font-size: clamp(12px, 1.5vw, 20px); }
+.projectCard:hover .relayScreenshot { transform: perspective(1400px) rotateX(0) rotateY(0) scale(1.012); }
 
 .projectInfo {
   display: grid;

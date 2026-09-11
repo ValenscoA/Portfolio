@@ -14,8 +14,8 @@ export type Project = {
   challenge: string;
   outcome: string;
   accent: string;
-  nextSlug: string;
-  nextTitle: string;
+  nextSlug?: string;
+  nextTitle?: string;
 };
 
 const enter = {
@@ -64,10 +64,12 @@ export default function ProjectDetail({ project }: { project: Project }) {
         </motion.div>
       </section>
 
-      <section className={styles.next}>
-        <span>Next project</span>
-        <Link href={`/projects/${project.nextSlug}`}>{project.nextTitle} <i aria-hidden="true">→</i></Link>
-      </section>
+      {project.nextSlug && project.nextTitle && (
+        <section className={styles.next}>
+          <span>Next project</span>
+          <Link href={`/projects/${project.nextSlug}`}>{project.nextTitle} <i aria-hidden="true">→</i></Link>
+        </section>
+      )}
     </main>
   );
 }
