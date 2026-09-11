@@ -13,13 +13,13 @@ export default function ResumePage() {
       </header>
       <section>
         <p>Valensco Aurelius</p>
-        <h1>Designer &amp;<br />front-end developer.</h1>
+        <h1>Software<br />engineer.</h1>
       </section>
       <div className={styles.grid}>
-        <div><span>Profile</span><p>I design and build focused digital products, with an eye for typography, interaction, and maintainable front-end systems.</p></div>
-        <div><span>Core skills</span><p>React, TypeScript, Next.js, interaction design, prototyping, motion, design systems.</p></div>
+        <div><span>Profile</span><p>Computer Science student focused on full-stack applications, AI tooling, and developer infrastructure. I build production-minded projects and care about maintainable systems.</p></div>
+        <div><span>Core skills</span><p>TypeScript, JavaScript, React, Node.js, Python, Java, SQL, Git, Docker, Linux.</p></div>
         <div><span>Contact</span><a href="mailto:hello@valensco.me">hello@valensco.me</a></div>
-        <div><span>Links</span><p><a href="https://github.com/ValenscoA" target="_blank" rel="noopener noreferrer">GitHub</a> · <a href="https://linkedin.com/in/REPLACE_WITH_USERNAME" target="_blank" rel="noopener noreferrer">LinkedIn</a></p></div>
+        <div><span>Links</span><p><a href="https://github.com/ValenscoA" target="_blank" rel="noopener noreferrer">GitHub</a> · <a href="https://www.linkedin.com/in/valensco-aurelius-56606b331/" target="_blank" rel="noopener noreferrer">LinkedIn</a></p></div>
       </div>
     </main>
   );
