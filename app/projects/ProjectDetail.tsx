@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { motion } from "motion/react";
 import BrandLogo from "../components/BrandLogo";
 import styles from "./project.module.css";
@@ -14,6 +15,7 @@ export type Project = {
   challenge: string;
   outcome: string;
   accent: string;
+  logoSrc?: string;
   nextSlug?: string;
   nextTitle?: string;
 };
@@ -51,7 +53,17 @@ export default function ProjectDetail({ project }: { project: Project }) {
       >
         <div className={styles.featureInner}>
           <span>{project.number} / VA</span>
-          <b>{project.title}</b>
+          {project.logoSrc ? (
+            <Image
+              className={styles.featureLogo}
+              src={project.logoSrc}
+              alt={`${project.title} logo`}
+              width={512}
+              height={512}
+            />
+          ) : (
+            <b>{project.title}</b>
+          )}
           <i>Selected work · {project.year}</i>
         </div>
       </motion.section>

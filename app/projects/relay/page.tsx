@@ -18,6 +18,7 @@ const project: Project = {
   outcome:
     "A Tauri desktop application with a React interface, native Rust streaming, SQLite conversation history, Windows Credential Manager integration, model comparison, usage tracking, and native backup tools.",
   accent: "#c4f661",
+  logoSrc: "/images/projects/relay-logo.png",
 };
 
 export default function RelayPage() {
