@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import Image from "next/image";
 import {
   AnimatePresence,
   motion,
@@ -17,59 +16,37 @@ import {
   useState,
 } from "react";
 import BrandLogo from "./components/BrandLogo";
+import ProjectMedia from "./components/ProjectMedia";
+import {
+  projects,
+  skillGroups,
+} from "./data/projects";
 import styles from "./page.module.css";
 
 const resumeUrl = "https://valensco.me/resume.pdf";
+const githubUrl = "https://github.com/ValenscoA";
 
 const navItems = [
   { label: "About", href: "#about", external: false },
-  { label: "Projects", href: "#projects", external: false },
   { label: "Skills", href: "#skills", external: false },
+  { label: "Work", href: "#projects", external: false },
+  { label: "Capabilities", href: "#capabilities", external: false },
   { label: "Contact", href: "#contact", external: false },
   { label: "Resume", href: resumeUrl, external: true },
 ] as const;
 
-const projects = [
-  {
-    slug: "relay",
-    number: "01",
-    title: "Relay",
-    type: "Desktop AI workspace · Full stack",
-    year: "2026",
-    className: styles.relay,
-    sourceUrl: "https://github.com/ValenscoA/relay-ai",
-    caseStudyUrl: "/projects/relay",
-  },
-];
+const sectionIds = ["top", "about", "skills", "projects", "capabilities", "contact"];
 
 const terminalCommands: Record<string, string[]> = {
   whoami: ["Valensco Aurelius", "Computer Science student · Software engineer"],
   location: ["Malaysia · UTC+8"],
-  focus: ["Software engineering", "Interface design", "Embedded systems"],
+  focus: ["Full-stack applications", "AI tooling", "Developer infrastructure"],
   now: ["Building production-minded projects.", "Learning new technologies.", "Open to internship opportunities."],
   contact: ["hello@valensco.me", "github.com/ValenscoA"],
   help: ["Available commands: whoami, location, focus, now, contact, clear"],
 };
 
 const terminalHistoryLimit = 3;
-
-const technologies = [
-  "Python",
-  "Java",
-  "C++",
-  "JavaScript",
-  "TypeScript",
-  "HTML",
-  "CSS",
-  "React",
-  "Node.js",
-  "SQL",
-  "Git",
-  "Docker",
-  "Linux",
-  "Arduino",
-  "Raspberry Pi",
-];
 
 const reveal = {
   initial: { opacity: 0, y: 18 },
@@ -243,21 +220,6 @@ function Menu({
   );
 }
 
-function ProjectVisual({ project }: { project: (typeof projects)[number] }) {
-  return (
-    <div className={`${styles.projectVisual} ${project.className}`} aria-hidden="true">
-      <Image
-        className={styles.relayScreenshot}
-        src="/images/projects/relay-chat.png"
-        alt=""
-        width={2559}
-        height={1503}
-        sizes="(max-width: 900px) 92vw, 82vw"
-      />
-    </div>
-  );
-}
-
 function AboutSection() {
   const [command, setCommand] = useState("");
   const [history, setHistory] = useState([
@@ -338,40 +300,102 @@ function AboutSection() {
   );
 }
 
-function TechnologyList({ hidden = false }: { hidden?: boolean }) {
+function SkillsSection() {
   return (
-    <ul className={styles.marqueeList} aria-hidden={hidden || undefined}>
-      {technologies.map((technology) => <li key={technology}>{technology}</li>)}
-    </ul>
+    <section
+      className={`${styles.section} ${styles.skills}`}
+      id="skills"
+      aria-labelledby="skills-title"
+    >
+      <motion.div {...reveal} className={styles.skillsIntro}>
+        <div className={styles.sectionLabel}><span>02</span>Skills</div>
+        <h2 id="skills-title">What I work with.</h2>
+        <p>Grouped by how I actually use them, weighted toward what my projects demonstrate.</p>
+      </motion.div>
+
+      <motion.div {...reveal} className={styles.skillGroups}>
+        {skillGroups.map((group) => (
+          <div key={group.label} className={styles.skillGroup}>
+            <span>{group.label}</span>
+            <p className={styles.skillGroupNote}>{group.description}</p>
+            <ul>
+              {group.technologies.map((technology) => (
+                <li key={technology}>{technology}</li>
+              ))}
+            </ul>
+          </div>
+        ))}
+      </motion.div>
+    </section>
   );
 }
 
-function TechnologyMarquee() {
-  return (
-    <section
-      className={`${styles.section} ${styles.technologies}`}
-      id="technologies"
-      aria-labelledby="technologies-title"
-    >
-      <motion.div {...reveal} className={styles.technologyLabel}>
-        <h2 id="technologies-title"><span>02</span>Skills</h2>
-      </motion.div>
+function ProjectCard({ project, index }: { project: (typeof projects)[number]; index: number }) {
+  const linkHref = project.caseStudyUrl;
+  const frameClass = project.visual === "relay"
+    ? `${styles.projectMediaFrame} ${styles.relay}`
+    : styles.projectMediaFrame;
 
-      <motion.div
-        {...reveal}
-        className={styles.marquee}
-      >
-        <ul className={styles.srOnly}>
-          {technologies.map((technology) => <li key={technology}>{technology}</li>)}
-        </ul>
-        <div className={styles.marqueeViewport} aria-hidden="true">
-          <div className={styles.marqueeTrack}>
-            <TechnologyList hidden />
-            <TechnologyList hidden />
-          </div>
+  return (
+    <motion.article
+      {...reveal}
+      transition={{ ...reveal.transition, delay: index * 0.06 }}
+      className={styles.projectCard}
+    >
+      {linkHref ? (
+        <Link href={linkHref} className={styles.projectMediaLink} aria-label={`View ${project.title} case study`}>
+          <ProjectMedia media={project.media} title={project.title} className={frameClass} />
+        </Link>
+      ) : (
+        <ProjectMedia media={project.media} title={project.title} className={frameClass} />
+      )}
+
+      <div className={styles.projectInfo}>
+        <div className={styles.projectHeading}>
+          <span>{project.number}</span>
+          <h3>
+            {linkHref ? <Link href={linkHref}>{project.title}</Link> : project.title}
+          </h3>
+          {project.status.label && (
+            <span className={styles.projectStatus}>
+              {project.status.label}{project.status.year ? ` · ${project.status.year}` : ""}
+            </span>
+          )}
         </div>
-      </motion.div>
-    </section>
+
+        <p className={styles.projectSummary}>{project.summary}</p>
+
+        {project.technologies.length > 0 && (
+          <ul className={styles.projectTech} aria-label={`${project.title} technologies`}>
+            {project.technologies.map((technology) => (
+              <li key={technology}>{technology}</li>
+            ))}
+          </ul>
+        )}
+
+        {project.features.length > 0 && (
+          <ul className={styles.projectFeatures}>
+            {project.features.map((feature) => (
+              <li key={feature}>{feature}</li>
+            ))}
+          </ul>
+        )}
+
+        {project.note && <p className={styles.projectNote}>{project.note}</p>}
+
+        {(project.sourceUrl || project.demoUrl || linkHref) && (
+          <div className={styles.projectActions}>
+            {project.sourceUrl && (
+              <a href={project.sourceUrl} target="_blank" rel="noopener noreferrer">Source Code</a>
+            )}
+            {project.demoUrl && (
+              <a href={project.demoUrl} target="_blank" rel="noopener noreferrer">Live Demo</a>
+            )}
+            {linkHref && <Link href={linkHref}>Case Study</Link>}
+          </div>
+        )}
+      </div>
+    </motion.article>
   );
 }
 
@@ -384,6 +408,8 @@ export default function Portfolio() {
   }, []);
 
   useEffect(() => {
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+
     const lenis = new Lenis({ duration: 1.15, smoothWheel: true, wheelMultiplier: 0.9 });
     let frame = 0;
     const raf = (time: number) => {
@@ -398,7 +424,6 @@ export default function Portfolio() {
   }, []);
 
   useEffect(() => {
-    const sectionIds = ["top", "about", "projects", "skills", "contact"];
     const updateActiveSection = () => {
       const navbar = document.querySelector<HTMLElement>("[data-site-navbar]");
       const marker = (navbar?.getBoundingClientRect().bottom ?? 0) + window.innerHeight * 0.22;
@@ -442,55 +467,54 @@ export default function Portfolio() {
         >
           <span className={styles.firstName}>Valensco</span><span>Aurelius</span>
         </motion.h1>
+        <motion.p
+          className={styles.heroTagline}
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 1, delay: 0.62, ease: [0.22, 1, 0.36, 1] }}
+        >
+          I build software that I actually want to use.
+        </motion.p>
+        <motion.p
+          className={styles.heroIntro}
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.9, delay: 0.72, ease: [0.22, 1, 0.36, 1] }}
+        >
+          Computer Science student focused on full-stack applications, AI tooling, and developer infrastructure.
+        </motion.p>
         <motion.div
           className={styles.heroLinks}
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.9, delay: 0.78, ease: [0.22, 1, 0.36, 1] }}
+          transition={{ duration: 0.9, delay: 0.84, ease: [0.22, 1, 0.36, 1] }}
         >
           <a href="#contact" onClick={(event) => handleNavigate(event, "#contact")}>Contact</a>
+          <a href={githubUrl} target="_blank" rel="noopener noreferrer">GitHub <Arrow diagonal /></a>
           <a href={resumeUrl} target="_blank" rel="noopener noreferrer">Resume <Arrow diagonal /></a>
         </motion.div>
       </section>
 
       <AboutSection />
 
-      <TechnologyMarquee />
+      <SkillsSection />
 
       <section className={`${styles.section} ${styles.projects}`} id="projects" aria-labelledby="projects-title">
         <motion.div {...reveal} className={styles.sectionHead}>
-          <div className={styles.sectionLabel}><span>02</span>Selected work</div>
+          <div className={styles.sectionLabel}><span>03</span>Selected work</div>
           <h2 id="projects-title">Built with intent.</h2>
         </motion.div>
         <div className={styles.projectList}>
           {projects.map((project, index) => (
-            <motion.article
-              key={project.slug}
-              {...reveal}
-              transition={{ ...reveal.transition, delay: index * 0.06 }}
-              className={styles.projectCard}
-            >
-              <Link href={project.caseStudyUrl} aria-label={`View ${project.title} case study`}>
-                <ProjectVisual project={project} />
-              </Link>
-              <div className={styles.projectInfo}>
-                <div><span>{project.number}</span><h3><Link href={project.caseStudyUrl}>{project.title}</Link></h3></div>
-                <p>{project.type}</p>
-                <div className={styles.projectActions}>
-                  <span className={styles.projectYear}>{project.year}</span>
-                  <a href={project.sourceUrl} target="_blank" rel="noopener noreferrer">Source Code</a>
-                  <Link href={project.caseStudyUrl}>Case Study</Link>
-                </div>
-              </div>
-            </motion.article>
+            <ProjectCard key={project.slug} project={project} index={index} />
           ))}
         </div>
       </section>
 
-      <section className={`${styles.section} ${styles.skills}`} id="skills" aria-labelledby="skills-title">
-        <motion.div {...reveal} className={styles.sectionLabel}><span>03</span>Capabilities</motion.div>
+      <section className={`${styles.section} ${styles.capabilities}`} id="capabilities" aria-labelledby="capabilities-title">
+        <motion.div {...reveal} className={styles.sectionLabel}><span>04</span>Capabilities</motion.div>
         <motion.div {...reveal} className={styles.skillsLayout}>
-          <h2 id="skills-title">The tools change.<br />The standard doesn&apos;t.</h2>
+          <h2 id="capabilities-title">The tools change.<br />The standard doesn&apos;t.</h2>
           <div className={styles.skillColumns}>
             <div><span>Build</span><p>React</p><p>TypeScript</p><p>Next.js</p><p>Node.js</p></div>
             <div><span>Design</span><p>Figma</p><p>Interaction</p><p>Design systems</p><p>Prototyping</p></div>
@@ -500,14 +524,14 @@ export default function Portfolio() {
       </section>
 
       <section className={`${styles.section} ${styles.contact}`} id="contact" aria-labelledby="contact-title">
-        <motion.div {...reveal} className={styles.sectionLabel}><span>04</span>Contact</motion.div>
+        <motion.div {...reveal} className={styles.sectionLabel}><span>05</span>Contact</motion.div>
         <motion.div {...reveal} className={styles.contactMain}>
           <h2 id="contact-title">Let&apos;s build something together.</h2>
           <p>I&apos;m always open to internship opportunities, collaborations, and interesting projects. Feel free to reach out.</p>
           <div className={styles.contactLinks} aria-label="Contact links">
             <a href="mailto:hello@valensco.me">hello@valensco.me</a>
-            <a href="https://github.com/ValenscoA" target="_blank" rel="noopener noreferrer">GitHub</a>
-            <a href="https://linkedin.com/in/REPLACE_WITH_USERNAME" target="_blank" rel="noopener noreferrer">LinkedIn</a>
+            <a href={githubUrl} target="_blank" rel="noopener noreferrer">GitHub</a>
+            <a href="https://www.linkedin.com/in/valensco-aurelius-56606b331/" target="_blank" rel="noopener noreferrer">LinkedIn</a>
             <a href="https://valensco.me" target="_blank" rel="noopener noreferrer">Portfolio</a>
             <a href={resumeUrl} target="_blank" rel="noopener noreferrer">Resume</a>
           </div>
@@ -515,8 +539,8 @@ export default function Portfolio() {
         <motion.footer {...reveal} className={styles.footer}>
           <span>Valensco Aurelius<br />© 2026 Valensco Aurelius.<br />Built with Next.js, Motion and TypeScript.</span>
           <div>
-            <a href="https://github.com/ValenscoA" target="_blank" rel="noopener noreferrer">GitHub</a>
-            <a href="https://linkedin.com/in/REPLACE_WITH_USERNAME" target="_blank" rel="noopener noreferrer">LinkedIn</a>
+            <a href={githubUrl} target="_blank" rel="noopener noreferrer">GitHub</a>
+            <a href="https://www.linkedin.com/in/valensco-aurelius-56606b331/" target="_blank" rel="noopener noreferrer">LinkedIn</a>
             <a href="mailto:hello@valensco.me">Email</a>
             <a href={resumeUrl} target="_blank" rel="noopener noreferrer">Resume</a>
           </div>
